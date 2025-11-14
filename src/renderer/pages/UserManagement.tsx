@@ -50,7 +50,7 @@ const UserManagement = () => {
 
   const loadUsers = async () => {
     try {
-      const result = await window.api.getAllUsers();
+      const result = await window.api.getUsers();
       if (result.success) {
         setUsers(result.data);
       } else {
