@@ -897,14 +897,14 @@ const POS = () => {
 
         {/* Cart Items */}
         <div className="flex-1 overflow-auto p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center justify-between">
             <span className="flex items-center gap-2">
               <ShoppingCart size={20} />
               {t('pos.cart') || 'Cart'}
             </span>
             {items.length > 0 && (
               <span className="text-sm font-semibold px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
-                {items.length} item{items.length !== 1 ? 's' : ''}
+                {items.length}
               </span>
             )}
           </h2>
@@ -926,92 +926,45 @@ const POS = () => {
               </div>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {items.map((item, index) => {
-                const product = allProducts.find(p => p.id === item.productId);
                 const stockRemaining = (item.currentStock || 0) - item.quantity;
                 const itemSavings = item.discount;
 
                 return (
                   <div
                     key={item.productId}
-                    className="bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-blue-300 transition-all shadow-sm hover:shadow-md group"
+                    className="bg-white rounded-lg p-2.5 border-2 border-gray-200 hover:border-blue-300 transition-all shadow-sm hover:shadow group"
                     style={{
                       animation: `slideIn 0.3s ease-out ${index * 0.05}s both`
                     }}
                   >
-                    {/* Item Header with Image */}
-                    <div className="flex gap-3 mb-3">
-                      {/* Product Thumbnail */}
-                      {product?.imageUrl ? (
-                        <img
-                          src={product.imageUrl}
-                          alt={item.productName}
-                          className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <div className={`w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0 ${product?.imageUrl ? 'hidden' : ''}`}>
-                        <ShoppingCart size={24} className="text-blue-400" />
-                      </div>
-
-                      {/* Item Info */}
+                    {/* Single Row Layout */}
+                    <div className="flex items-center gap-2 mb-2">
+                      {/* Product Name & Price */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2 mb-1">
-                          <h3 className="font-bold text-sm text-gray-900 line-clamp-2 flex-1">
-                            {item.productName}
-                          </h3>
-                          <button
-                            onClick={() => {
-                              removeItem(item.productId);
-                              audioFeedback.success();
-                              toast.success('Item removed', { duration: 1000 });
-                            }}
-                            className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                            title="Remove item"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
-                          <span className="font-medium">{formatCurrency(item.unitPrice)} each</span>
+                        <h3 className="font-bold text-sm text-gray-900 truncate mb-0.5">
+                          {item.productName}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-gray-600">{formatCurrency(item.unitPrice)}</span>
                           <span className="text-gray-400">•</span>
                           <span className={`font-semibold ${
-                            stockRemaining <= 5 ? 'text-yellow-600' :
-                            stockRemaining <= 2 ? 'text-orange-600' :
-                            stockRemaining === 0 ? 'text-red-600' : 'text-gray-600'
+                            stockRemaining <= 2 ? 'text-red-600' :
+                            stockRemaining <= 5 ? 'text-yellow-600' : 'text-gray-500'
                           }`}>
                             {stockRemaining} left
                           </span>
                         </div>
-
-                        {/* Subtotal with Savings */}
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-lg font-bold text-blue-600">
-                            {formatCurrency(item.subtotal)}
-                          </span>
-                          {itemSavings > 0 && (
-                            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                              Save {formatCurrency(itemSavings)}
-                            </span>
-                          )}
-                        </div>
                       </div>
-                    </div>
 
-                    {/* Quantity Controls - Enhanced */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <label className="text-xs font-semibold text-gray-600 w-16">Quantity:</label>
-                      <div className="flex items-center gap-2 flex-1">
+                      {/* Quantity Controls - Compact */}
+                      <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handleQuantityChange(item.productId, -1)}
-                          className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 rounded-lg font-bold shadow-sm hover:shadow transition-all active:scale-95"
+                          className="w-7 h-7 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 rounded font-bold transition-all active:scale-95"
                         >
-                          <Minus size={16} />
+                          <Minus size={14} />
                         </button>
 
                         <input
@@ -1027,43 +980,62 @@ const POS = () => {
                               toast.error('Not enough stock!');
                             }
                           }}
-                          className="w-16 h-9 text-center font-bold text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          className="w-12 h-7 text-center text-sm font-bold text-gray-900 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                         />
 
                         <button
                           onClick={() => handleQuantityChange(item.productId, 1)}
                           disabled={item.quantity >= item.currentStock}
-                          className={`w-9 h-9 flex items-center justify-center rounded-lg font-bold shadow-sm hover:shadow transition-all active:scale-95 ${
+                          className={`w-7 h-7 flex items-center justify-center rounded font-bold transition-all active:scale-95 ${
                             item.quantity >= item.currentStock
                               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                              : 'bg-blue-500 hover:bg-blue-600 text-white'
                           }`}
                         >
-                          <Plus size={16} />
+                          <Plus size={14} />
                         </button>
+                      </div>
 
-                        <span className="text-xs text-gray-500 ml-auto">
-                          × {formatCurrency(item.unitPrice)} = <span className="font-semibold text-gray-700">{formatCurrency(item.quantity * item.unitPrice)}</span>
-                        </span>
+                      {/* Subtotal & Delete */}
+                      <div className="flex items-center gap-2">
+                        <div className="text-right min-w-[80px]">
+                          <p className="text-base font-bold text-blue-600">
+                            {formatCurrency(item.subtotal)}
+                          </p>
+                          {itemSavings > 0 && (
+                            <p className="text-xs font-semibold text-green-600">
+                              -{formatCurrency(itemSavings)}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => {
+                            removeItem(item.productId);
+                            audioFeedback.success();
+                            toast.success('Item removed', { duration: 1000 });
+                          }}
+                          className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                          title="Remove"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
 
-                    {/* Item Discount - Enhanced */}
-                    <div className="flex items-center gap-3 p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                      <Percent size={14} className="text-green-600 flex-shrink-0" />
-                      <label className="text-xs font-semibold text-green-700 w-16">Discount:</label>
-                      <div className="flex items-center gap-2 flex-1">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.discount}
-                          onChange={(e) => handleItemDiscountChange(item.productId, parseFloat(e.target.value) || 0)}
-                          placeholder="0.00"
-                          className="flex-1 px-3 py-1.5 text-sm font-medium border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none bg-white"
-                        />
-                        <span className="text-xs font-semibold text-green-700 whitespace-nowrap">Rs.</span>
-                      </div>
+                    {/* Discount Row - Compact */}
+                    <div className="flex items-center gap-2 px-2 py-1.5 bg-green-50 rounded border border-green-200">
+                      <Percent size={12} className="text-green-600" />
+                      <span className="text-xs font-semibold text-green-700 w-14">Discount:</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.discount}
+                        onChange={(e) => handleItemDiscountChange(item.productId, parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                        className="flex-1 px-2 py-1 text-xs font-medium border border-green-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none bg-white"
+                      />
+                      <span className="text-xs font-semibold text-green-700">Rs.</span>
                     </div>
                   </div>
                 );
