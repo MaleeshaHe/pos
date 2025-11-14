@@ -48,6 +48,9 @@ contextBridge.exposeInMainWorld('api', {
   getCurrentUser: () => ipcRenderer.invoke('users:getCurrent'),
   getUsers: () => ipcRenderer.invoke('users:getAll'),
   createUser: (data: any) => ipcRenderer.invoke('users:create', data),
+  updateUser: (id: number, data: any) => ipcRenderer.invoke('users:update', id, data),
+  deleteUser: (id: number) => ipcRenderer.invoke('users:delete', id),
+  toggleUserStatus: (id: number) => ipcRenderer.invoke('users:toggleStatus', id),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:getAll'),
@@ -83,8 +86,9 @@ contextBridge.exposeInMainWorld('api', {
   getExpenseCategories: () => ipcRenderer.invoke('expenseCategories:getAll'),
 
   // Activity Logs
-  logActivity: (action: string, module: string, details?: any) =>
-    ipcRenderer.invoke('activityLogs:create', action, module, details),
+  createActivityLog: (data: any) => ipcRenderer.invoke('activityLogs:create', data),
+  getActivityLogs: (filters?: any) => ipcRenderer.invoke('activityLogs:getAll', filters),
+  getActivityLogsByUser: (userId: number) => ipcRenderer.invoke('activityLogs:getByUser', userId),
 });
 
 export type API = typeof api;
