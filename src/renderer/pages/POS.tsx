@@ -25,7 +25,7 @@ import ReturnBillModal from '../components/ReturnBillModal';
 
 interface Product {
   id: number;
-  nameEn: string;
+  name: string;
   nameSi?: string;
   barcode?: string;
   sku: string;
@@ -123,7 +123,7 @@ const POS = () => {
     if (result.success && result.data.length > 0) {
       const product = result.data[0];
       handleAddToCart(product);
-      toast.success(`📦 ${product.nameEn} scanned!`, { icon: '✓' });
+      toast.success(`📦 ${product.name} scanned!`, { icon: '✓' });
     } else {
       toast.error(`Barcode "${barcode}" not found!`);
     }
@@ -155,8 +155,8 @@ const POS = () => {
 
     addItem({
       productId: product.id,
-      productName: i18n.language === 'si' && product.nameSi ? product.nameSi : product.nameEn,
-      nameEn: product.nameEn,
+      productName: i18n.language === 'si' && product.nameSi ? product.nameSi : product.name,
+      nameEn: product.name,
       nameSi: product.nameSi,
       quantity: 1,
       unitPrice: product.sellingPrice,
@@ -165,7 +165,7 @@ const POS = () => {
       currentStock: product.stock,
     });
 
-    toast.success(`${product.nameEn} added`, { duration: 1000 });
+    toast.success(`${product.name} added`, { duration: 1000 });
     setSearchQuery('');
     searchInputRef.current?.focus();
   };
@@ -222,7 +222,7 @@ const POS = () => {
         status: 'held',
         items: items.map((item) => ({
           productId: item.productId,
-          productName: item.nameEn,
+          productName: item.nameEn || item.productName,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           discount: item.discount,
@@ -309,7 +309,7 @@ const POS = () => {
         splitPayments: paymentData.splitPayments,
         items: items.map((item) => ({
           productId: item.productId,
-          productName: item.nameEn,
+          productName: item.nameEn || item.productName,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           discount: item.discount,
@@ -408,7 +408,7 @@ const POS = () => {
                 className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200 hover:border-blue-400"
               >
                 <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 text-sm">
-                  {i18n.language === 'si' && product.nameSi ? product.nameSi : product.nameEn}
+                  {i18n.language === 'si' && product.nameSi ? product.nameSi : product.name}
                 </h3>
                 <p className="text-xs text-gray-500 mb-2">{product.sku}</p>
                 <p className="text-lg font-bold text-blue-600 mb-2">
