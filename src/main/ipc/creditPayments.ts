@@ -1,10 +1,11 @@
 import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
 import { eq, sql } from 'drizzle-orm';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
-ipcMain.handle('creditPayments:create', async (_, data: any) => {
+safeHandle('creditPayments:create', async (_, data: any) => {
   try {
     const result = await db.transaction(async (tx) => {
       // Create credit payment
@@ -26,7 +27,7 @@ ipcMain.handle('creditPayments:create', async (_, data: any) => {
   }
 });
 
-ipcMain.handle('creditPayments:getByCustomer', async (_, customerId: number) => {
+safeHandle('creditPayments:getByCustomer', async (_, customerId: number) => {
   try {
     const payments = await db.select().from(schema.creditPayments)
       .where(eq(schema.creditPayments.customerId, customerId))

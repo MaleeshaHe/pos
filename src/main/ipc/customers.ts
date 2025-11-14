@@ -1,10 +1,11 @@
 import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
 import { eq, like, or } from 'drizzle-orm';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
-ipcMain.handle('customers:getAll', async () => {
+safeHandle('customers:getAll', async () => {
   try {
     const customers = await db.select().from(schema.customers)
       .where(eq(schema.customers.isActive, true))
@@ -15,7 +16,7 @@ ipcMain.handle('customers:getAll', async () => {
   }
 });
 
-ipcMain.handle('customers:getById', async (_, id: number) => {
+safeHandle('customers:getById', async (_, id: number) => {
   try {
     const customer = await db.select().from(schema.customers)
       .where(eq(schema.customers.id, id))
@@ -26,7 +27,7 @@ ipcMain.handle('customers:getById', async (_, id: number) => {
   }
 });
 
-ipcMain.handle('customers:search', async (_, query: string) => {
+safeHandle('customers:search', async (_, query: string) => {
   try {
     const customers = await db.select().from(schema.customers)
       .where(
@@ -43,7 +44,7 @@ ipcMain.handle('customers:search', async (_, query: string) => {
   }
 });
 
-ipcMain.handle('customers:create', async (_, data: any) => {
+safeHandle('customers:create', async (_, data: any) => {
   try {
     const result = await db.insert(schema.customers).values(data).returning();
     return { success: true, data: result[0] };
@@ -52,7 +53,7 @@ ipcMain.handle('customers:create', async (_, data: any) => {
   }
 });
 
-ipcMain.handle('customers:update', async (_, id: number, data: any) => {
+safeHandle('customers:update', async (_, id: number, data: any) => {
   try {
     const result = await db.update(schema.customers)
       .set({ ...data, updatedAt: new Date().toISOString() })
@@ -64,7 +65,7 @@ ipcMain.handle('customers:update', async (_, id: number, data: any) => {
   }
 });
 
-ipcMain.handle('customers:getCredit', async (_, id: number) => {
+safeHandle('customers:getCredit', async (_, id: number) => {
   try {
     // Get customer with credit details
     const customer = await db.select().from(schema.customers)

@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
 import { eq, and, desc, sql } from 'drizzle-orm';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
@@ -15,7 +16,7 @@ function generateBillNumber(): string {
   return `INV-${year}${month}${day}-${time}${random}`;
 }
 
-ipcMain.handle('bills:create', async (_, data: any) => {
+safeHandle('bills:create', async (_, data: any) => {
   try {
     const billNumber = generateBillNumber();
 
@@ -103,7 +104,7 @@ ipcMain.handle('bills:create', async (_, data: any) => {
   }
 });
 
-ipcMain.handle('bills:getAll', async (_, filters?: any) => {
+safeHandle('bills:getAll', async (_, filters?: any) => {
   try {
     let query = db.select().from(schema.bills).orderBy(desc(schema.bills.createdAt));
 
@@ -123,7 +124,7 @@ ipcMain.handle('bills:getAll', async (_, filters?: any) => {
   }
 });
 
-ipcMain.handle('bills:getById', async (_, id: number) => {
+safeHandle('bills:getById', async (_, id: number) => {
   try {
     const bill = await db.select().from(schema.bills)
       .where(eq(schema.bills.id, id))
@@ -139,7 +140,7 @@ ipcMain.handle('bills:getById', async (_, id: number) => {
   }
 });
 
-ipcMain.handle('bills:getByNumber', async (_, billNumber: string) => {
+safeHandle('bills:getByNumber', async (_, billNumber: string) => {
   try {
     const bill = await db.select().from(schema.bills)
       .where(eq(schema.bills.billNumber, billNumber))
@@ -159,7 +160,7 @@ ipcMain.handle('bills:getByNumber', async (_, billNumber: string) => {
   }
 });
 
-ipcMain.handle('bills:getHeld', async () => {
+safeHandle('bills:getHeld', async () => {
   try {
     const bills = await db.select().from(schema.bills)
       .where(eq(schema.bills.isHeld, true))
@@ -170,7 +171,7 @@ ipcMain.handle('bills:getHeld', async () => {
   }
 });
 
-ipcMain.handle('bills:hold', async (_, data: any) => {
+safeHandle('bills:hold', async (_, data: any) => {
   try {
     const billNumber = generateBillNumber();
     const [bill] = await db.insert(schema.bills).values({
@@ -194,7 +195,7 @@ ipcMain.handle('bills:hold', async (_, data: any) => {
   }
 });
 
-ipcMain.handle('bills:resume', async (_, id: number) => {
+safeHandle('bills:resume', async (_, id: number) => {
   try {
     const bill = await db.select().from(schema.bills)
       .where(eq(schema.bills.id, id))
