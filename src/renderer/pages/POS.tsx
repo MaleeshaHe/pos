@@ -130,8 +130,18 @@ const POS = () => {
 
     // Keyboard shortcuts (F1-F6)
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input fields, textareas, or select elements (except for F-keys)
+      const isFunctionKey = e.key.startsWith('F') && ['F1', 'F2', 'F3', 'F4', 'F5', 'F6'].includes(e.key);
+      if (!isFunctionKey && (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      )) {
+        return;
+      }
+
       // Prevent default for function keys
-      if (e.key.startsWith('F') && ['F1', 'F2', 'F3', 'F4', 'F5', 'F6'].includes(e.key)) {
+      if (isFunctionKey) {
         e.preventDefault();
       }
 
