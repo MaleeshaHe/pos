@@ -897,71 +897,177 @@ const POS = () => {
 
         {/* Cart Items */}
         <div className="flex-1 overflow-auto p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <ShoppingCart size={20} />
-            {t('pos.cart') || 'Cart'} ({items.length} items)
+          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <ShoppingCart size={20} />
+              {t('pos.cart') || 'Cart'}
+            </span>
+            {items.length > 0 && (
+              <span className="text-sm font-semibold px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
+                {items.length} item{items.length !== 1 ? 's' : ''}
+              </span>
+            )}
           </h2>
 
           {items.length === 0 ? (
-            <div className="text-center text-gray-500 mt-12">
-              <ShoppingCart size={48} className="mx-auto mb-2 opacity-50" />
-              <p>{t('pos.emptyCart') || 'Cart is empty'}</p>
-              <p className="text-sm">{t('pos.startScanning') || 'Start scanning or adding products'}</p>
+            <div className="text-center text-gray-500 mt-16">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                <ShoppingCart size={48} className="text-gray-400" />
+              </div>
+              <p className="text-lg font-semibold text-gray-700 mb-2">
+                {t('pos.emptyCart') || 'Cart is empty'}
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                {t('pos.startScanning') || 'Start scanning or adding products'}
+              </p>
+              <div className="text-xs text-gray-400 space-y-1">
+                <p>💡 Scan barcodes or click products to add</p>
+                <p>💡 Press F1 to search products</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.productId} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-sm text-gray-800">{item.productName}</h3>
-                      <p className="text-xs text-gray-600">{formatCurrency(item.unitPrice)} each</p>
-                    </div>
-                    <button
-                      onClick={() => removeItem(item.productId)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+              {items.map((item, index) => {
+                const product = allProducts.find(p => p.id === item.productId);
+                const stockRemaining = (item.currentStock || 0) - item.quantity;
+                const itemSavings = item.discount;
 
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleQuantityChange(item.productId, -1)}
-                        className="w-7 h-7 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded"
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <span className="w-12 text-center font-semibold">{item.quantity}</span>
-                      <button
-                        onClick={() => handleQuantityChange(item.productId, 1)}
-                        className="w-7 h-7 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    <span className="font-bold text-blue-600">
-                      {formatCurrency(item.subtotal)}
-                    </span>
-                  </div>
+                return (
+                  <div
+                    key={item.productId}
+                    className="bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-blue-300 transition-all shadow-sm hover:shadow-md group"
+                    style={{
+                      animation: `slideIn 0.3s ease-out ${index * 0.05}s both`
+                    }}
+                  >
+                    {/* Item Header with Image */}
+                    <div className="flex gap-3 mb-3">
+                      {/* Product Thumbnail */}
+                      {product?.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={item.productName}
+                          className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0 ${product?.imageUrl ? 'hidden' : ''}`}>
+                        <ShoppingCart size={24} className="text-blue-400" />
+                      </div>
 
-                  {/* Item Discount */}
-                  <div className="flex items-center gap-2">
-                    <Percent size={14} className="text-gray-500" />
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.discount}
-                      onChange={(e) => handleItemDiscountChange(item.productId, parseFloat(e.target.value) || 0)}
-                      placeholder="Discount"
-                      className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                    <span className="text-xs text-gray-600">disc</span>
+                      {/* Item Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2 mb-1">
+                          <h3 className="font-bold text-sm text-gray-900 line-clamp-2 flex-1">
+                            {item.productName}
+                          </h3>
+                          <button
+                            onClick={() => {
+                              removeItem(item.productId);
+                              audioFeedback.success();
+                              toast.success('Item removed', { duration: 1000 });
+                            }}
+                            className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            title="Remove item"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                          <span className="font-medium">{formatCurrency(item.unitPrice)} each</span>
+                          <span className="text-gray-400">•</span>
+                          <span className={`font-semibold ${
+                            stockRemaining <= 5 ? 'text-yellow-600' :
+                            stockRemaining <= 2 ? 'text-orange-600' :
+                            stockRemaining === 0 ? 'text-red-600' : 'text-gray-600'
+                          }`}>
+                            {stockRemaining} left
+                          </span>
+                        </div>
+
+                        {/* Subtotal with Savings */}
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-lg font-bold text-blue-600">
+                            {formatCurrency(item.subtotal)}
+                          </span>
+                          {itemSavings > 0 && (
+                            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                              Save {formatCurrency(itemSavings)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quantity Controls - Enhanced */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <label className="text-xs font-semibold text-gray-600 w-16">Quantity:</label>
+                      <div className="flex items-center gap-2 flex-1">
+                        <button
+                          onClick={() => handleQuantityChange(item.productId, -1)}
+                          className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 rounded-lg font-bold shadow-sm hover:shadow transition-all active:scale-95"
+                        >
+                          <Minus size={16} />
+                        </button>
+
+                        <input
+                          type="number"
+                          min="1"
+                          max={item.currentStock}
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newQty = parseInt(e.target.value) || 1;
+                            if (newQty > 0 && newQty <= item.currentStock) {
+                              updateItem(item.productId, { quantity: newQty });
+                            } else if (newQty > item.currentStock) {
+                              toast.error('Not enough stock!');
+                            }
+                          }}
+                          className="w-16 h-9 text-center font-bold text-gray-900 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        />
+
+                        <button
+                          onClick={() => handleQuantityChange(item.productId, 1)}
+                          disabled={item.quantity >= item.currentStock}
+                          className={`w-9 h-9 flex items-center justify-center rounded-lg font-bold shadow-sm hover:shadow transition-all active:scale-95 ${
+                            item.quantity >= item.currentStock
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                          }`}
+                        >
+                          <Plus size={16} />
+                        </button>
+
+                        <span className="text-xs text-gray-500 ml-auto">
+                          × {formatCurrency(item.unitPrice)} = <span className="font-semibold text-gray-700">{formatCurrency(item.quantity * item.unitPrice)}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Item Discount - Enhanced */}
+                    <div className="flex items-center gap-3 p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                      <Percent size={14} className="text-green-600 flex-shrink-0" />
+                      <label className="text-xs font-semibold text-green-700 w-16">Discount:</label>
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.discount}
+                          onChange={(e) => handleItemDiscountChange(item.productId, parseFloat(e.target.value) || 0)}
+                          placeholder="0.00"
+                          className="flex-1 px-3 py-1.5 text-sm font-medium border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none bg-white"
+                        />
+                        <span className="text-xs font-semibold text-green-700 whitespace-nowrap">Rs.</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
