@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   UserPlus,
   Keyboard,
+  ChevronDown,
 } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
 import { useAuthStore } from '../stores/authStore';
@@ -86,6 +87,7 @@ const POS = () => {
   const [lowStockProduct, setLowStockProduct] = useState<Product | null>(null);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [showCustomerHistory, setShowCustomerHistory] = useState(false);
+  const [showGlobalDiscount, setShowGlobalDiscount] = useState(false);
   const [globalDiscount, setGlobalDiscount] = useState(0);
   const [globalDiscountType, setGlobalDiscountType] = useState<'percentage' | 'amount'>('percentage');
   const [billNotes, setBillNotes] = useState('');
@@ -1049,48 +1051,62 @@ const POS = () => {
 
         {/* Totals & Checkout */}
         <div className="p-4 border-t border-gray-200 bg-white">
-          {/* Global Discount */}
+          {/* Global Discount - Collapsible */}
           {items.length > 0 && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Percent size={14} className="inline mr-1" />
-                Global Discount
-              </label>
-              <div className="flex gap-2 mb-2">
-                <button
-                  onClick={() => setGlobalDiscountType('percentage')}
-                  className={`flex-1 py-1 text-xs rounded ${
-                    globalDiscountType === 'percentage'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-300'
-                  }`}
-                >
-                  %
-                </button>
-                <button
-                  onClick={() => setGlobalDiscountType('amount')}
-                  className={`flex-1 py-1 text-xs rounded ${
-                    globalDiscountType === 'amount'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-300'
-                  }`}
-                >
-                  Rs.
-                </button>
-              </div>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={globalDiscount}
-                onChange={(e) => setGlobalDiscount(parseFloat(e.target.value) || 0)}
-                placeholder="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-              {globalDiscount > 0 && (
-                <p className="text-xs text-green-600 mt-1">
-                  Discount: -{formatCurrency(calculateGlobalDiscount())}
-                </p>
+            <div className="mb-3">
+              <button
+                onClick={() => setShowGlobalDiscount(!showGlobalDiscount)}
+                className="w-full flex items-center justify-between py-2 px-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium text-gray-700"
+              >
+                <span className="flex items-center gap-1">
+                  <Percent size={14} />
+                  Global Discount
+                  {globalDiscount > 0 && (
+                    <span className="text-xs text-green-600 font-semibold ml-2">
+                      (-{formatCurrency(calculateGlobalDiscount())})
+                    </span>
+                  )}
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${showGlobalDiscount ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {showGlobalDiscount && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={() => setGlobalDiscountType('percentage')}
+                      className={`flex-1 py-1.5 text-xs rounded font-semibold ${
+                        globalDiscountType === 'percentage'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white border border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      %
+                    </button>
+                    <button
+                      onClick={() => setGlobalDiscountType('amount')}
+                      className={`flex-1 py-1.5 text-xs rounded font-semibold ${
+                        globalDiscountType === 'amount'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white border border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      Rs.
+                    </button>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={globalDiscount}
+                    onChange={(e) => setGlobalDiscount(parseFloat(e.target.value) || 0)}
+                    placeholder="0"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
               )}
             </div>
           )}
