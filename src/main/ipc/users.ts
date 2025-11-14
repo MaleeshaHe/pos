@@ -87,3 +87,57 @@ ipcMain.handle('users:create', async (_, data: any) => {
     return { success: false, error: error.message };
   }
 });
+
+ipcMain.handle('users:update', async (_, id: number, data: any) => {
+  try {
+    // Don't update password if not provided
+    const updateData: any = {
+      fullName: data.fullName,
+      email: data.email,
+      phone: data.phone,
+      role: data.role,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (data.password) {
+      updateData.password = hashPassword(data.password);
+    }
+
+    await db.update(schema.users)
+      .set(updateData)
+      .where(eq(schema.users.id, id));
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('users:toggleStatus', async (_, id: number) => {
+  try {
+    const user = await db.select().from(schema.users)
+      .where(eq(schema.users.id, id))
+      .get();
+
+    await db.update(schema.users)
+      .set({ isActive: !user?.isActive })
+      .where(eq(schema.users.id, id));
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('users:delete', async (_, id: number) => {
+  try {
+    // Soft delete by deactivating
+    await db.update(schema.users)
+      .set({ isActive: false })
+      .where(eq(schema.users.id, id));
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});

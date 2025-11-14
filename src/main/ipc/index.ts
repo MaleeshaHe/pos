@@ -8,7 +8,9 @@ import './dashboard';
 import './categories';
 import './brands';
 import './suppliers';
+import './purchases';
 import './expenses';
 import './creditPayments';
+import './activityLogs';
 
 console.log('IPC handlers registered');

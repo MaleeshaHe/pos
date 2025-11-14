@@ -4,19 +4,26 @@ import {
   ShoppingCart,
   Package,
   Users,
+  Truck,
+  ShoppingBag,
+  Receipt,
   FileText,
   Settings,
   LogOut,
   Menu,
   X,
+  Shield,
+  Activity,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -24,12 +31,22 @@ const Layout = () => {
   };
 
   const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/pos', icon: ShoppingCart, label: 'POS' },
-    { path: '/products', icon: Package, label: 'Products' },
-    { path: '/customers', icon: Users, label: 'Customers' },
-    { path: '/reports', icon: FileText, label: 'Reports' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { path: '/pos', icon: ShoppingCart, label: t('nav.pos') },
+    { path: '/products', icon: Package, label: t('nav.products') },
+    { path: '/customers', icon: Users, label: t('nav.customers') },
+    { path: '/suppliers', icon: Truck, label: 'Suppliers' },
+    { path: '/purchases', icon: ShoppingBag, label: 'Purchases' },
+    { path: '/transactions', icon: Receipt, label: 'Transactions' },
+    { path: '/reports', icon: FileText, label: t('nav.reports') },
+    ...(user?.role === 'admin' ? [
+      { path: '/users', icon: Shield, label: t('users.title') },
+      { path: '/activity-logs', icon: Activity, label: t('activityLogs.title') },
+    ] : []),
+    ...(user?.role === 'manager' ? [
+      { path: '/activity-logs', icon: Activity, label: t('activityLogs.title') },
+    ] : []),
+    { path: '/settings', icon: Settings, label: t('nav.settings') },
   ];
 
   return (
@@ -92,7 +109,7 @@ const Layout = () => {
             className="flex items-center gap-3 px-4 py-2 w-full rounded-lg hover:bg-blue-700 transition-colors"
           >
             <LogOut size={20} />
-            {sidebarOpen && <span>Logout</span>}
+            {sidebarOpen && <span>{t('nav.logout')}</span>}
           </button>
         </div>
       </aside>

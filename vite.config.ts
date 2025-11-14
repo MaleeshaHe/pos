@@ -13,6 +13,17 @@ export default defineConfig({
         vite: {
           build: {
             outDir: 'dist/main',
+            rollupOptions: {
+              external: [
+                'better-sqlite3',
+                'electron',
+                'drizzle-orm',
+                'drizzle-orm/better-sqlite3',
+                'crypto',
+                'fs',
+                'path',
+              ],
+            },
           },
         },
       },
@@ -24,6 +35,9 @@ export default defineConfig({
         vite: {
           build: {
             outDir: 'dist/preload',
+            rollupOptions: {
+              external: ['electron'],
+            },
           },
         },
       },

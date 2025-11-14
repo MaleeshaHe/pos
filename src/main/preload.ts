@@ -31,11 +31,15 @@ contextBridge.exposeInMainWorld('api', {
   // Bills
   createBill: (data: any) => ipcRenderer.invoke('bills:create', data),
   getBills: (filters?: any) => ipcRenderer.invoke('bills:getAll', filters),
+  getCustomerBills: (customerId: number) => ipcRenderer.invoke('bills:getByCustomer', customerId),
   getBill: (id: number) => ipcRenderer.invoke('bills:getById', id),
+  getBillById: (id: number) => ipcRenderer.invoke('bills:getById', id),
+  getBillItems: (billId: number) => ipcRenderer.invoke('bills:getItems', billId),
   getBillByNumber: (billNumber: string) => ipcRenderer.invoke('bills:getByNumber', billNumber),
   getHeldBills: () => ipcRenderer.invoke('bills:getHeld'),
   holdBill: (data: any) => ipcRenderer.invoke('bills:hold', data),
   resumeBill: (id: number) => ipcRenderer.invoke('bills:resume', id),
+  deleteHeldBill: (id: number) => ipcRenderer.invoke('bills:deleteHeld', id),
 
   // Credit Payments
   createCreditPayment: (data: any) => ipcRenderer.invoke('creditPayments:create', data),
@@ -46,6 +50,9 @@ contextBridge.exposeInMainWorld('api', {
   getCurrentUser: () => ipcRenderer.invoke('users:getCurrent'),
   getUsers: () => ipcRenderer.invoke('users:getAll'),
   createUser: (data: any) => ipcRenderer.invoke('users:create', data),
+  updateUser: (id: number, data: any) => ipcRenderer.invoke('users:update', id, data),
+  deleteUser: (id: number) => ipcRenderer.invoke('users:delete', id),
+  toggleUserStatus: (id: number) => ipcRenderer.invoke('users:toggleStatus', id),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:getAll'),
@@ -65,14 +72,25 @@ contextBridge.exposeInMainWorld('api', {
   getSuppliers: () => ipcRenderer.invoke('suppliers:getAll'),
   createSupplier: (data: any) => ipcRenderer.invoke('suppliers:create', data),
 
+  // Purchases
+  getPurchases: () => ipcRenderer.invoke('purchases:getAll'),
+  getPurchase: (id: number) => ipcRenderer.invoke('purchases:getById', id),
+  createPurchase: (data: any) => ipcRenderer.invoke('purchases:create', data),
+  updatePurchase: (id: number, data: any) => ipcRenderer.invoke('purchases:update', id, data),
+  getPurchaseItems: (purchaseId: number) => ipcRenderer.invoke('purchases:getItems', purchaseId),
+
+  // Stock Logs
+  createStockLog: (data: any) => ipcRenderer.invoke('stockLogs:create', data),
+
   // Expenses
   getExpenses: (filters?: any) => ipcRenderer.invoke('expenses:getAll', filters),
   createExpense: (data: any) => ipcRenderer.invoke('expenses:create', data),
   getExpenseCategories: () => ipcRenderer.invoke('expenseCategories:getAll'),
 
   // Activity Logs
-  logActivity: (action: string, module: string, details?: any) =>
-    ipcRenderer.invoke('activityLogs:create', action, module, details),
+  createActivityLog: (data: any) => ipcRenderer.invoke('activityLogs:create', data),
+  getActivityLogs: (filters?: any) => ipcRenderer.invoke('activityLogs:getAll', filters),
+  getActivityLogsByUser: (userId: number) => ipcRenderer.invoke('activityLogs:getByUser', userId),
 });
 
 export type API = typeof api;

@@ -6,6 +6,7 @@
   "author": "Your Company",
   "license": "MIT",
   "scripts": {
+    "postinstall": "electron-rebuild",
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "wait-on tcp:5173 && cross-env NODE_ENV=development electron .",
@@ -16,6 +17,7 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
+    "rebuild": "electron-rebuild",
     "db:generate": "drizzle-kit generate:sqlite",
     "db:migrate": "tsx src/main/db/migrate.ts",
     "db:studio": "drizzle-kit studio"
@@ -48,6 +50,7 @@
     "drizzle-kit": "^0.20.13",
     "electron": "^28.2.1",
     "electron-builder": "^24.9.1",
+    "electron-rebuild": "^3.2.9",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "postcss": "^8.4.35",
