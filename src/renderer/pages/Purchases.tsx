@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { Plus, Search, Eye, Package, Calendar, DollarSign, TrendingUp, PackageCheck } from 'lucide-react';
 import AddPurchaseModal from '../components/AddPurchaseModal';
@@ -19,6 +20,7 @@ interface Purchase {
 }
 
 const Purchases = () => {
+  const { t } = useTranslation();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -43,7 +45,7 @@ const Purchases = () => {
           );
           const enrichedPurchases = result.data.map((p: Purchase) => ({
             ...p,
-            supplierName: supplierMap.get(p.supplierId) || 'Unknown Supplier',
+            supplierName: supplierMap.get(p.supplierId) || t('purchases.unknownSupplier'),
           }));
           setPurchases(enrichedPurchases);
         } else {
@@ -51,7 +53,7 @@ const Purchases = () => {
         }
       }
     } catch (error) {
-      toast.error('Failed to load purchase orders');
+      toast.error(t('purchases.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -112,15 +114,15 @@ const Purchases = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Purchase Orders</h1>
-          <p className="text-gray-600">Manage your purchase orders and inventory procurement</p>
+          <h1 className="text-3xl font-bold text-gray-800">{t('purchases.title')}</h1>
+          <p className="text-gray-600">{t('purchases.subtitle')}</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
         >
           <Plus size={20} />
-          New Purchase Order
+          {t('purchases.newPurchaseOrder')}
         </button>
       </div>
 
@@ -129,7 +131,7 @@ const Purchases = () => {
         <div className="bg-white rounded-lg shadow-md p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total Orders</p>
+              <p className="text-sm text-gray-600 mb-1">{t('purchases.totalOrders')}</p>
               <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -141,7 +143,7 @@ const Purchases = () => {
         <div className="bg-white rounded-lg shadow-md p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Pending</p>
+              <p className="text-sm text-gray-600 mb-1">{t('purchases.pending')}</p>
               <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
             </div>
             <div className="p-3 bg-yellow-100 rounded-lg">
@@ -153,7 +155,7 @@ const Purchases = () => {
         <div className="bg-white rounded-lg shadow-md p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Received</p>
+              <p className="text-sm text-gray-600 mb-1">{t('purchases.received')}</p>
               <p className="text-2xl font-bold text-blue-600">{stats.received}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -165,7 +167,7 @@ const Purchases = () => {
         <div className="bg-white rounded-lg shadow-md p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total Value</p>
+              <p className="text-sm text-gray-600 mb-1">{t('purchases.totalValue')}</p>
               <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalValue)}</p>
             </div>
             <div className="p-3 bg-green-100 rounded-lg">
@@ -185,7 +187,7 @@ const Purchases = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by PO number or supplier name..."
+              placeholder={t('purchases.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             />
           </div>
@@ -197,11 +199,11 @@ const Purchases = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="received">Received</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="all">{t('purchases.allStatus')}</option>
+              <option value="pending">{t('purchases.statusPending')}</option>
+              <option value="received">{t('purchases.statusReceived')}</option>
+              <option value="completed">{t('purchases.statusCompleted')}</option>
+              <option value="cancelled">{t('purchases.statusCancelled')}</option>
             </select>
           </div>
         </div>
@@ -213,13 +215,13 @@ const Purchases = () => {
           <table className="min-w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">PO Number</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Supplier</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Order Date</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Expected Delivery</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Total Amount</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Status</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Actions</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('purchases.poNumber')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('purchases.supplier')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('purchases.orderDate')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('purchases.expectedDelivery')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('purchases.totalAmount')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('purchases.status')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('purchases.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -235,8 +237,8 @@ const Purchases = () => {
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-500">
                     <Package size={48} className="mx-auto mb-2 opacity-50" />
-                    <p>No purchase orders found</p>
-                    <p className="text-sm mt-1">Create your first purchase order to get started</p>
+                    <p>{t('purchases.noFound')}</p>
+                    <p className="text-sm mt-1">{t('purchases.createFirst')}</p>
                   </td>
                 </tr>
               ) : (
@@ -269,12 +271,12 @@ const Purchases = () => {
                           <button
                             onClick={() => handleReceiveGoods(purchase.id)}
                             className="p-1 text-green-600 hover:bg-green-50 rounded"
-                            title="Receive Goods (GRN)"
+                            title={t('purchases.receiveGoods')}
                           >
                             <PackageCheck size={16} />
                           </button>
                         )}
-                        <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="View Details">
+                        <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title={t('purchases.viewDetails')}>
                           <Eye size={16} />
                         </button>
                       </div>

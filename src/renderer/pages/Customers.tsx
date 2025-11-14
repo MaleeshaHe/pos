@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
   Plus,
@@ -32,6 +33,7 @@ interface Customer {
 }
 
 const Customers = () => {
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ const Customers = () => {
         setCustomers(result.data);
       }
     } catch (error) {
-      toast.error('Failed to load customers');
+      toast.error(t('customers.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -129,15 +131,15 @@ const Customers = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Customer Management</h1>
-          <p className="text-gray-600">Manage customer profiles, credit, and loyalty</p>
+          <h1 className="text-3xl font-bold text-gray-800">{t('customers.customerManagement')}</h1>
+          <p className="text-gray-600">{t('customers.subtitleAlt')}</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
         >
           <Plus size={20} />
-          Add Customer
+          {t('customers.addCustomer')}
         </button>
       </div>
 
@@ -145,7 +147,7 @@ const Customers = () => {
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Total Customers</p>
+            <p className="text-sm text-gray-600">{t('customers.totalCustomers')}</p>
             <UsersIcon size={20} className="text-blue-600" />
           </div>
           <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
@@ -153,7 +155,7 @@ const Customers = () => {
 
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">VIP Customers</p>
+            <p className="text-sm text-gray-600">{t('customers.vipCustomers')}</p>
             <Star size={20} className="text-yellow-600" />
           </div>
           <p className="text-2xl font-bold text-yellow-600">{stats.vip}</p>
@@ -161,7 +163,7 @@ const Customers = () => {
 
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">With Credit</p>
+            <p className="text-sm text-gray-600">{t('customers.withCredit')}</p>
             <CreditCard size={20} className="text-orange-600" />
           </div>
           <p className="text-2xl font-bold text-orange-600">{stats.withCredit}</p>
@@ -169,7 +171,7 @@ const Customers = () => {
 
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Credit Out</p>
+            <p className="text-sm text-gray-600">{t('customers.creditOut')}</p>
             <DollarSign size={20} className="text-red-600" />
           </div>
           <p className="text-xl font-bold text-red-600">{formatCurrency(stats.totalCreditOut)}</p>
@@ -177,7 +179,7 @@ const Customers = () => {
 
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Loyalty Points</p>
+            <p className="text-sm text-gray-600">{t('customers.loyalty')}</p>
             <TrendingUp size={20} className="text-green-600" />
           </div>
           <p className="text-2xl font-bold text-green-600">{stats.totalLoyaltyPoints}</p>
@@ -185,7 +187,7 @@ const Customers = () => {
 
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Critical Credit</p>
+            <p className="text-sm text-gray-600">{t('customers.criticalCredit')}</p>
             <AlertCircle size={20} className="text-red-600" />
           </div>
           <p className="text-2xl font-bold text-red-600">{stats.criticalCredit}</p>
@@ -201,7 +203,7 @@ const Customers = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, phone, email, or customer ID..."
+              placeholder={t('customers.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             />
           </div>
@@ -213,7 +215,7 @@ const Customers = () => {
                 filterStatus === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
-              All
+              {t('common.all')}
             </button>
             <button
               onClick={() => setFilterStatus('vip')}
@@ -221,7 +223,7 @@ const Customers = () => {
                 filterStatus === 'vip' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
-              VIP
+              {t('customers.vip')}
             </button>
             <button
               onClick={() => setFilterStatus('credit')}
@@ -229,7 +231,7 @@ const Customers = () => {
                 filterStatus === 'credit' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
-              Has Credit
+              {t('customers.hasCredit')}
             </button>
             <button
               onClick={() => setFilterStatus('active')}
@@ -237,7 +239,7 @@ const Customers = () => {
                 filterStatus === 'active' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
-              Active
+              {t('customers.active')}
             </button>
           </div>
         </div>
@@ -249,14 +251,14 @@ const Customers = () => {
           <table className="min-w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Customer</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Contact</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Member Level</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Loyalty</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Credit Limit</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Current Credit</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Status</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Actions</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('customers.name')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('customers.contact')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('customers.memberLevel')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('customers.loyalty')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('customers.creditLimit')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('customers.currentCredit')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('customers.status')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('customers.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -272,7 +274,7 @@ const Customers = () => {
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-gray-500">
                     <UsersIcon size={48} className="mx-auto mb-2 opacity-50" />
-                    <p>No customers found</p>
+                    <p>{t('customers.noCustomers')}</p>
                   </td>
                 </tr>
               ) : (
@@ -293,7 +295,7 @@ const Customers = () => {
                                 <Star size={14} className="text-yellow-500 fill-yellow-500" />
                               )}
                             </div>
-                            <p className="text-xs text-gray-500">ID: {customer.id}</p>
+                            <p className="text-xs text-gray-500">{t('customers.idLabel')} {customer.id}</p>
                             {customer.notes && (
                               <p className="text-xs text-blue-600 italic">{customer.notes}</p>
                             )}
@@ -312,7 +314,7 @@ const Customers = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-right font-semibold text-blue-600">
-                        {customer.loyaltyPoints} pts
+                        {customer.loyaltyPoints} {t('customers.pts')}
                       </td>
                       <td className="py-3 px-4 text-sm text-right text-gray-600">
                         {formatCurrency(customer.creditLimit)}
@@ -327,7 +329,7 @@ const Customers = () => {
                             {formatCurrency(customer.currentCredit)}
                           </p>
                           {customer.currentCredit > 0 && customer.creditLimit > 0 && (
-                            <p className="text-xs text-gray-500">{creditUsage.toFixed(0)}% used</p>
+                            <p className="text-xs text-gray-500">{creditUsage.toFixed(0)}{t('customers.percentUsed')}</p>
                           )}
                         </div>
                       </td>
@@ -335,19 +337,19 @@ const Customers = () => {
                         {creditStatus === 'critical' ? (
                           <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium flex items-center justify-center gap-1">
                             <AlertCircle size={12} />
-                            Critical
+                            {t('customers.critical')}
                           </span>
                         ) : creditStatus === 'warning' ? (
                           <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                            Warning
+                            {t('customers.warning')}
                           </span>
                         ) : customer.currentCredit > 0 ? (
                           <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
-                            Has Credit
+                            {t('customers.hasCredit')}
                           </span>
                         ) : (
                           <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                            Good
+                            {t('customers.good')}
                           </span>
                         )}
                       </td>
@@ -356,14 +358,14 @@ const Customers = () => {
                           <button
                             onClick={() => handleEdit(customer)}
                             className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                            title="Edit Customer"
+                            title={t('customers.editCustomer')}
                           >
                             <Edit size={16} />
                           </button>
                           <button
                             onClick={() => handleViewCreditHistory(customer)}
                             className="p-1 text-purple-600 hover:bg-purple-50 rounded"
-                            title="View Credit History"
+                            title={t('customers.viewCreditHistory')}
                           >
                             <History size={16} />
                           </button>
@@ -371,7 +373,7 @@ const Customers = () => {
                             <button
                               onClick={() => handleMakePayment(customer)}
                               className="p-1 text-green-600 hover:bg-green-50 rounded"
-                              title="Make Payment"
+                              title={t('customers.makePayment')}
                             >
                               <CreditCard size={16} />
                             </button>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
   Receipt,
@@ -37,6 +38,7 @@ interface Bill {
 }
 
 const Transactions = () => {
+  const { t } = useTranslation();
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,10 +62,10 @@ const Transactions = () => {
       if (result.success) {
         setBills(result.data || []);
       } else {
-        toast.error('Failed to load transactions');
+        toast.error(t('transactions.loadFailed'));
       }
     } catch (error) {
-      toast.error('Failed to load transactions');
+      toast.error(t('transactions.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -151,7 +153,7 @@ const Transactions = () => {
         printReceipt(billData);
       }
     } catch (error) {
-      toast.error('Failed to load bill details');
+      toast.error(t('transactions.billLoadFailed'));
     }
   };
 
@@ -273,7 +275,7 @@ const Transactions = () => {
       printWindow.close();
     }, 250);
 
-    toast.success('Printing receipt...');
+    toast.success(t('transactions.printing'));
   };
 
   const formatCurrency = (amount: number) => {
@@ -298,15 +300,15 @@ const Transactions = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Transactions</h1>
-          <p className="text-gray-600">View and manage all sales transactions</p>
+          <h1 className="text-3xl font-bold text-gray-800">{t('transactions.title')}</h1>
+          <p className="text-gray-600">{t('transactions.subtitle')}</p>
         </div>
         <button
           onClick={loadBills}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
         >
           <RefreshCw size={20} />
-          Refresh
+          {t('common.refresh')}
         </button>
       </div>
 
@@ -314,7 +316,7 @@ const Transactions = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Total Transactions</p>
+            <p className="text-sm text-gray-600">{t('transactions.totalTransactions')}</p>
             <Receipt size={20} className="text-blue-600" />
           </div>
           <p className="text-2xl font-bold text-gray-800">{stats.totalTransactions}</p>
@@ -322,7 +324,7 @@ const Transactions = () => {
 
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Total Revenue</p>
+            <p className="text-sm text-gray-600">{t('transactions.totalRevenue')}</p>
             <TrendingUp size={20} className="text-green-600" />
           </div>
           <p className="text-xl font-bold text-green-600">{formatCurrency(stats.totalRevenue)}</p>
@@ -330,7 +332,7 @@ const Transactions = () => {
 
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Cash</p>
+            <p className="text-sm text-gray-600">{t('transactions.cash')}</p>
             <Banknote size={20} className="text-green-600" />
           </div>
           <p className="text-lg font-bold text-gray-800">
@@ -340,7 +342,7 @@ const Transactions = () => {
 
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Card/Credit</p>
+            <p className="text-sm text-gray-600">{t('transactions.cardCredit')}</p>
             <CreditCard size={20} className="text-blue-600" />
           </div>
           <p className="text-lg font-bold text-gray-800">
@@ -354,14 +356,14 @@ const Transactions = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search */}
           <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.search')}</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Bill number, customer..."
+                placeholder={t('transactions.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -369,33 +371,33 @@ const Transactions = () => {
 
           {/* Date Filter */}
           <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date Filter</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('transactions.dateFilter')}</label>
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as any)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="custom">Custom Range</option>
+              <option value="today">{t('reports.today')}</option>
+              <option value="yesterday">{t('reports.yesterday')}</option>
+              <option value="week">{t('reports.thisWeek')}</option>
+              <option value="month">{t('reports.thisMonth')}</option>
+              <option value="custom">{t('transactions.customRange')}</option>
             </select>
           </div>
 
           {/* Payment Method Filter */}
           <div className="md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('transactions.paymentMethod')}</label>
             <select
               value={paymentMethodFilter}
               onChange={(e) => setPaymentMethodFilter(e.target.value as any)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
-              <option value="all">All Methods</option>
-              <option value="cash">Cash</option>
-              <option value="card">Card</option>
-              <option value="credit">Credit</option>
-              <option value="split">Split Payment</option>
+              <option value="all">{t('transactions.allMethods')}</option>
+              <option value="cash">{t('pos.cash')}</option>
+              <option value="card">{t('pos.card')}</option>
+              <option value="credit">{t('pos.credit')}</option>
+              <option value="split">{t('pos.split')}</option>
             </select>
           </div>
         </div>
@@ -404,7 +406,7 @@ const Transactions = () => {
         {dateFilter === 'custom' && (
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('reports.startDate')}</label>
               <input
                 type="date"
                 value={customDateRange.start}
@@ -413,7 +415,7 @@ const Transactions = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('reports.endDate')}</label>
               <input
                 type="date"
                 value={customDateRange.end}
@@ -431,13 +433,13 @@ const Transactions = () => {
           <table className="min-w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Bill Number</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Date & Time</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Customer</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Payment</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Amount</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Status</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Actions</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('transactions.billNumber')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('transactions.dateTime')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('transactions.customer')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('transactions.payment')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('transactions.amount')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('transactions.status')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('transactions.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -447,14 +449,14 @@ const Transactions = () => {
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">Loading transactions...</p>
+                    <p className="text-sm text-gray-500 mt-2">{t('transactions.loading')}</p>
                   </td>
                 </tr>
               ) : filteredBills.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-500">
                     <Receipt size={48} className="mx-auto mb-2 opacity-50" />
-                    <p>No transactions found</p>
+                    <p>{t('transactions.noFound')}</p>
                   </td>
                 </tr>
               ) : (
@@ -471,7 +473,7 @@ const Transactions = () => {
                       <p className="text-xs text-gray-500">{format(new Date(bill.createdAt), 'HH:mm:ss')}</p>
                     </td>
                     <td className="py-3 px-4">
-                      <p className="text-sm text-gray-900">{bill.customerName || 'Walk-in Customer'}</p>
+                      <p className="text-sm text-gray-900">{bill.customerName || t('pos.walkInCustomer')}</p>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
@@ -482,7 +484,7 @@ const Transactions = () => {
                     <td className="py-3 px-4 text-right">
                       <p className="text-sm font-bold text-gray-900">{formatCurrency(bill.total)}</p>
                       {bill.discount > 0 && (
-                        <p className="text-xs text-green-600">-{formatCurrency(bill.discount)} discount</p>
+                        <p className="text-xs text-green-600">-{formatCurrency(bill.discount)} {t('transactions.discountLabel')}</p>
                       )}
                     </td>
                     <td className="py-3 px-4 text-center">
@@ -495,7 +497,9 @@ const Transactions = () => {
                             : 'bg-yellow-100 text-yellow-800'
                         }`}
                       >
-                        {bill.status}
+                        {bill.status === 'completed' ? t('transactions.statusCompleted') :
+                         bill.status === 'refunded' ? t('transactions.statusRefunded') :
+                         t('transactions.statusPending')}
                       </span>
                     </td>
                     <td className="py-3 px-4">
@@ -503,14 +507,14 @@ const Transactions = () => {
                         <button
                           onClick={() => handleViewDetails(bill)}
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="View Details"
+                          title={t('transactions.viewDetails')}
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           onClick={() => handlePrintReceipt(bill)}
                           className="p-1 text-purple-600 hover:bg-purple-50 rounded"
-                          title="Print Receipt"
+                          title={t('pos.printReceipt')}
                         >
                           <Printer size={16} />
                         </button>

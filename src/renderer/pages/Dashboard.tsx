@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DollarSign,
   ShoppingBag,
@@ -47,6 +48,7 @@ interface ProductPerformance {
 }
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [dailySales, setDailySales] = useState<DailySales[]>([]);
@@ -231,7 +233,7 @@ const Dashboard = () => {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600">{t('dashboard.loading')}</p>
         </div>
       </div>
     );
@@ -299,7 +301,7 @@ const Dashboard = () => {
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <BarChart3 className="text-blue-600" size={24} />
-          <h3 className="text-lg font-bold text-gray-800">Daily Sales (Last 7 Days)</h3>
+          <h3 className="text-lg font-bold text-gray-800">{t('dashboard.dailySalesChart')}</h3>
         </div>
         <div className="flex items-end justify-between gap-2 h-64">
           {data.map((day, index) => (
@@ -348,7 +350,7 @@ const Dashboard = () => {
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <PieChart className="text-green-600" size={24} />
-          <h3 className="text-lg font-bold text-gray-800">Category Sales Distribution</h3>
+          <h3 className="text-lg font-bold text-gray-800">{t('dashboard.categorySalesChart')}</h3>
         </div>
         <div className="flex items-center gap-8">
           <svg viewBox="0 0 200 200" className="w-48 h-48">
@@ -391,21 +393,21 @@ const Dashboard = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-        <p className="text-gray-600">Real-time overview of your store performance</p>
+        <h1 className="text-3xl font-bold text-gray-800">{t('dashboard.title')}</h1>
+        <p className="text-gray-600">{t('dashboard.subtitle')}</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <StatCard
-          title="Today's Sales"
+          title={t('dashboard.todaySales')}
           value={formatCurrency(stats?.todaySales || 0)}
           icon={DollarSign}
           color="#10b981"
-          subtitle={`${stats?.todayTransactions || 0} transactions`}
+          subtitle={`${stats?.todayTransactions || 0} ${t('dashboard.transactions')}`}
         />
         <StatCard
-          title="Monthly Sales"
+          title={t('dashboard.monthlySales')}
           value={formatCurrency(monthlySales.current)}
           icon={Calendar}
           color="#3b82f6"
@@ -415,30 +417,30 @@ const Dashboard = () => {
           }}
         />
         <StatCard
-          title="Total Products"
+          title={t('dashboard.totalProducts')}
           value={stats?.totalProducts || 0}
           icon={Package}
           color="#8b5cf6"
-          subtitle={`${lowStockProducts.length} low stock`}
+          subtitle={`${lowStockProducts.length} ${t('dashboard.lowStock')}`}
         />
         <StatCard
-          title="Total Customers"
+          title={t('dashboard.totalCustomers')}
           value={stats?.totalCustomers || 0}
           icon={Users}
           color="#06b6d4"
         />
         <StatCard
-          title="Outstanding Credit"
+          title={t('dashboard.outstandingCredit')}
           value={formatCurrency(stats?.totalCredit || 0)}
           icon={TrendingUp}
           color="#f59e0b"
         />
         <StatCard
-          title="Low Stock Alerts"
+          title={t('dashboard.lowStockAlerts')}
           value={lowStockProducts.length}
           icon={AlertTriangle}
           color="#ef4444"
-          subtitle="Needs attention"
+          subtitle={t('dashboard.needsAttention')}
         />
       </div>
 
@@ -454,7 +456,7 @@ const Dashboard = () => {
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <Star className="text-yellow-500" size={24} />
-            <h3 className="text-lg font-bold text-gray-800">Best Selling Items</h3>
+            <h3 className="text-lg font-bold text-gray-800">{t('dashboard.bestSellingItems')}</h3>
           </div>
           <div className="space-y-3">
             {bestSelling.map((product, index) => (
@@ -464,7 +466,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
-                  <p className="text-xs text-gray-500">{product.quantitySold} units sold</p>
+                  <p className="text-xs text-gray-500">{product.quantitySold} {t('dashboard.unitsSold')}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gray-900">{formatCurrency(product.revenue)}</p>
@@ -472,7 +474,7 @@ const Dashboard = () => {
               </div>
             ))}
             {bestSelling.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">No sales data yet</p>
+              <p className="text-sm text-gray-500 text-center py-4">{t('dashboard.noSalesData')}</p>
             )}
           </div>
         </div>
@@ -481,7 +483,7 @@ const Dashboard = () => {
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="text-green-600" size={24} />
-            <h3 className="text-lg font-bold text-gray-800">Most Profitable</h3>
+            <h3 className="text-lg font-bold text-gray-800">{t('dashboard.mostProfitable')}</h3>
           </div>
           <div className="space-y-3">
             {mostProfitable.map((product, index) => (
@@ -492,7 +494,7 @@ const Dashboard = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
                   <p className="text-xs text-gray-500">
-                    Margin: {(((product.sellingPrice - product.costPrice) / product.sellingPrice) * 100).toFixed(1)}%
+                    {t('dashboard.margin')} {(((product.sellingPrice - product.costPrice) / product.sellingPrice) * 100).toFixed(1)}%
                   </p>
                 </div>
                 <div className="text-right">
@@ -501,7 +503,7 @@ const Dashboard = () => {
               </div>
             ))}
             {mostProfitable.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">No profit data yet</p>
+              <p className="text-sm text-gray-500 text-center py-4">{t('dashboard.noProfitData')}</p>
             )}
           </div>
         </div>
@@ -510,7 +512,7 @@ const Dashboard = () => {
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <Bell className="text-red-600" size={24} />
-            <h3 className="text-lg font-bold text-gray-800">Low Stock Alerts</h3>
+            <h3 className="text-lg font-bold text-gray-800">{t('dashboard.lowStockAlerts')}</h3>
           </div>
           <div className="space-y-3">
             {lowStockProducts.map((product) => (
@@ -524,13 +526,13 @@ const Dashboard = () => {
                 </div>
                 <div className="flex-shrink-0">
                   <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">
-                    {product.currentStock === 0 ? 'OUT' : 'LOW'}
+                    {product.currentStock === 0 ? t('dashboard.stockOut') : t('dashboard.stockLow')}
                   </span>
                 </div>
               </div>
             ))}
             {lowStockProducts.length === 0 && (
-              <p className="text-sm text-green-600 text-center py-4">All stock levels are good!</p>
+              <p className="text-sm text-green-600 text-center py-4">{t('dashboard.allStockGood')}</p>
             )}
           </div>
         </div>
@@ -538,15 +540,15 @@ const Dashboard = () => {
 
       {/* Recent Transactions */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Last 10 Transactions</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">{t('dashboard.lastTransactions')}</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Bill Number</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Date & Time</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Payment Method</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Total</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('dashboard.billNumber')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('dashboard.dateTime')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('dashboard.paymentMethod')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('dashboard.total')}</th>
               </tr>
             </thead>
             <tbody>
@@ -570,7 +572,7 @@ const Dashboard = () => {
               ) : (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-gray-500">
-                    No transactions yet
+                    {t('dashboard.noTransactions')}
                   </td>
                 </tr>
               )}

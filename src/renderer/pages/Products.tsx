@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
   Plus,
@@ -36,6 +37,7 @@ interface Product {
 }
 
 const Products = () => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ const Products = () => {
         setProducts(result.data);
       }
     } catch (error) {
-      toast.error('Failed to load products');
+      toast.error(t('products.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -70,30 +72,30 @@ const Products = () => {
   };
 
   const handleDelete = async (productId: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) {
+    if (!confirm(t('products.deleteConfirm'))) {
       return;
     }
 
     try {
       const result = await window.api.deleteProduct(productId);
       if (result.success) {
-        toast.success('Product deleted successfully');
+        toast.success(t('products.deleteSuccess'));
         loadProducts();
       } else {
-        toast.error(result.error || 'Failed to delete product');
+        toast.error(result.error || t('products.deleteFailed'));
       }
     } catch (error) {
-      toast.error('An error occurred');
+      toast.error(t('common.errorOccurred'));
     }
   };
 
   const handleBulkDelete = async () => {
     if (selectedProducts.length === 0) {
-      toast.error('No products selected');
+      toast.error(t('products.noSelected'));
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete ${selectedProducts.length} product(s)?`)) {
+    if (!confirm(t('products.bulkDeleteConfirm', { count: selectedProducts.length }))) {
       return;
     }
 
@@ -101,17 +103,17 @@ const Products = () => {
       for (const productId of selectedProducts) {
         await window.api.deleteProduct(productId);
       }
-      toast.success(`${selectedProducts.length} product(s) deleted successfully`);
+      toast.success(t('products.bulkDeleteSuccess', { count: selectedProducts.length }));
       setSelectedProducts([]);
       loadProducts();
     } catch (error) {
-      toast.error('Failed to delete products');
+      toast.error(t('products.bulkDeleteFailed'));
     }
   };
 
   const handleExportCSV = () => {
     if (filteredProducts.length === 0) {
-      toast.error('No products to export');
+      toast.error(t('products.noToExport'));
       return;
     }
 
@@ -142,12 +144,12 @@ const Products = () => {
     link.download = `products_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 
-    toast.success('Products exported successfully');
+    toast.success(t('products.exportSuccess'));
   };
 
   const handlePrintBarcodes = () => {
     if (selectedProducts.length === 0) {
-      toast.error('Please select products to print barcodes');
+      toast.error(t('products.selectToPrint'));
       return;
     }
 
@@ -216,7 +218,7 @@ const Products = () => {
       printWindow.print();
     }, 250);
 
-    toast.success('Barcode labels sent to printer');
+    toast.success(t('products.barcodePrinted'));
   };
 
   const handleStockAdjustment = (product: Product) => {
@@ -275,8 +277,8 @@ const Products = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Inventory Management</h1>
-          <p className="text-gray-600">Manage products, stock levels, and more</p>
+          <h1 className="text-3xl font-bold text-gray-800">{t('products.inventoryManagement')}</h1>
+          <p className="text-gray-600">{t('products.subtitleAlt')}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -284,21 +286,21 @@ const Products = () => {
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
           >
             <Upload size={18} />
-            Import
+            {t('common.import')}
           </button>
           <button
             onClick={handleExportCSV}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
           >
             <Download size={18} />
-            Export
+            {t('common.export')}
           </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
           >
             <Plus size={20} />
-            Add Product
+            {t('products.addProduct')}
           </button>
         </div>
       </div>
@@ -306,23 +308,23 @@ const Products = () => {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow-md p-4">
-          <p className="text-sm text-gray-600 mb-1">Total Products</p>
+          <p className="text-sm text-gray-600 mb-1">{t('products.totalProducts')}</p>
           <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
         </div>
         <div className="bg-white rounded-lg shadow-md p-4">
-          <p className="text-sm text-gray-600 mb-1">In Stock</p>
+          <p className="text-sm text-gray-600 mb-1">{t('products.inStock')}</p>
           <p className="text-2xl font-bold text-green-600">{stats.inStock}</p>
         </div>
         <div className="bg-white rounded-lg shadow-md p-4">
-          <p className="text-sm text-gray-600 mb-1">Low Stock</p>
+          <p className="text-sm text-gray-600 mb-1">{t('products.lowStock')}</p>
           <p className="text-2xl font-bold text-yellow-600">{stats.lowStock}</p>
         </div>
         <div className="bg-white rounded-lg shadow-md p-4">
-          <p className="text-sm text-gray-600 mb-1">Out of Stock</p>
+          <p className="text-sm text-gray-600 mb-1">{t('products.outOfStock')}</p>
           <p className="text-2xl font-bold text-red-600">{stats.outOfStock}</p>
         </div>
         <div className="bg-white rounded-lg shadow-md p-4">
-          <p className="text-sm text-gray-600 mb-1">Total Value</p>
+          <p className="text-sm text-gray-600 mb-1">{t('products.totalValue')}</p>
           <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats.totalValue)}</p>
         </div>
       </div>
@@ -336,7 +338,7 @@ const Products = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products by name, SKU, or barcode..."
+              placeholder={t('products.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             />
           </div>
@@ -348,7 +350,7 @@ const Products = () => {
                 filterStatus === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
-              All
+              {t('common.all')}
             </button>
             <button
               onClick={() => setFilterStatus('inStock')}
@@ -356,7 +358,7 @@ const Products = () => {
                 filterStatus === 'inStock' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
-              In Stock
+              {t('products.inStock')}
             </button>
             <button
               onClick={() => setFilterStatus('lowStock')}
@@ -364,7 +366,7 @@ const Products = () => {
                 filterStatus === 'lowStock' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
-              Low Stock
+              {t('products.lowStock')}
             </button>
             <button
               onClick={() => setFilterStatus('outOfStock')}
@@ -372,7 +374,7 @@ const Products = () => {
                 filterStatus === 'outOfStock' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'
               }`}
             >
-              Out of Stock
+              {t('products.outOfStock')}
             </button>
           </div>
         </div>
@@ -382,7 +384,7 @@ const Products = () => {
       {selectedProducts.length > 0 && (
         <div className="mb-6 bg-blue-50 rounded-lg p-4 flex items-center justify-between">
           <p className="text-sm font-medium text-blue-900">
-            {selectedProducts.length} product(s) selected
+            {t('products.selectedCount', { count: selectedProducts.length })}
           </p>
           <div className="flex gap-2">
             <button
@@ -390,14 +392,14 @@ const Products = () => {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
             >
               <Printer size={16} />
-              Print Barcodes
+              {t('products.printBarcodes')}
             </button>
             <button
               onClick={handleBulkDelete}
               className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm"
             >
               <Trash2 size={16} />
-              Delete Selected
+              {t('products.deleteSelected')}
             </button>
           </div>
         </div>
@@ -418,14 +420,14 @@ const Products = () => {
                     )}
                   </button>
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">SKU</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Name</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Barcode</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Cost</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Price</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Stock</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Status</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Actions</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('products.sku')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('products.name')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('products.barcode')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('products.cost')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('products.price')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('products.stock')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('products.status')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('products.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -441,7 +443,7 @@ const Products = () => {
                 <tr>
                   <td colSpan={9} className="py-8 text-center text-gray-500">
                     <Package size={48} className="mx-auto mb-2 opacity-50" />
-                    <p>No products found</p>
+                    <p>{t('products.noProducts')}</p>
                   </td>
                 </tr>
               ) : (
@@ -487,15 +489,15 @@ const Products = () => {
                     <td className="py-3 px-4 text-center">
                       {product.stock === 0 ? (
                         <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-                          Out of Stock
+                          {t('products.outOfStock')}
                         </span>
                       ) : product.stock <= product.reorderLevel ? (
                         <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                          Low Stock
+                          {t('products.lowStock')}
                         </span>
                       ) : (
                         <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                          In Stock
+                          {t('products.inStock')}
                         </span>
                       )}
                     </td>
@@ -504,7 +506,7 @@ const Products = () => {
                         <button
                           onClick={() => handleStockAdjustment(product)}
                           className="p-1 text-purple-600 hover:bg-purple-50 rounded"
-                          title="Adjust Stock"
+                          title={t('products.adjustStock')}
                         >
                           {product.stock <= product.reorderLevel ? (
                             <PackagePlus size={16} />
@@ -515,14 +517,14 @@ const Products = () => {
                         <button
                           onClick={() => handleEdit(product)}
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="Edit"
+                          title={t('common.edit')}
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(product.id)}
                           className="p-1 text-red-600 hover:bg-red-50 rounded"
-                          title="Delete"
+                          title={t('common.delete')}
                         >
                           <Trash2 size={16} />
                         </button>

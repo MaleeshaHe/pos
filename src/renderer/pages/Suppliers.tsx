@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { Plus, Search, Edit, Trash2, Users, Phone, Mail, MapPin } from 'lucide-react';
 import AddSupplierModal from '../components/AddSupplierModal';
@@ -18,6 +19,7 @@ interface Supplier {
 }
 
 const Suppliers = () => {
+  const { t } = useTranslation();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ const Suppliers = () => {
         setSuppliers(result.data);
       }
     } catch (error) {
-      toast.error('Failed to load suppliers');
+      toast.error(t('suppliers.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -56,15 +58,15 @@ const Suppliers = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Suppliers</h1>
-          <p className="text-gray-600">Manage your suppliers and vendors</p>
+          <h1 className="text-3xl font-bold text-gray-800">{t('suppliers.title')}</h1>
+          <p className="text-gray-600">{t('suppliers.subtitle')}</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
         >
           <Plus size={20} />
-          Add Supplier
+          {t('suppliers.addSupplier')}
         </button>
       </div>
 
@@ -76,7 +78,7 @@ const Suppliers = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search suppliers by name, phone, or email..."
+            placeholder={t('suppliers.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           />
         </div>
@@ -88,13 +90,13 @@ const Suppliers = () => {
           <table className="min-w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Supplier Name</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Contact Person</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Phone & Email</th>
-                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Payment Terms</th>
-                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">Current Due</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Status</th>
-                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">Actions</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('suppliers.supplierName')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('suppliers.contactPerson')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('suppliers.phoneEmail')}</th>
+                <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">{t('suppliers.paymentTerms')}</th>
+                <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700">{t('suppliers.currentDue')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('suppliers.status')}</th>
+                <th className="text-center py-3 px-4 font-semibold text-sm text-gray-700">{t('suppliers.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -110,8 +112,8 @@ const Suppliers = () => {
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-500">
                     <Users size={48} className="mx-auto mb-2 opacity-50" />
-                    <p>No suppliers found</p>
-                    <p className="text-sm mt-1">Add your first supplier to get started</p>
+                    <p>{t('suppliers.noFound')}</p>
+                    <p className="text-sm mt-1">{t('suppliers.addFirst')}</p>
                   </td>
                 </tr>
               ) : (
@@ -168,11 +170,11 @@ const Suppliers = () => {
                     <td className="py-3 px-4 text-center">
                       {supplier.isActive ? (
                         <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                          Active
+                          {t('suppliers.active')}
                         </span>
                       ) : (
                         <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-                          Inactive
+                          {t('suppliers.inactive')}
                         </span>
                       )}
                     </td>

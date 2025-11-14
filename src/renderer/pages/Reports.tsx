@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { FileText, Download, Calendar, TrendingUp, DollarSign, Package, Users, Printer } from 'lucide-react';
 import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns';
@@ -6,6 +7,7 @@ import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMon
 type ReportType = 'sales' | 'products' | 'customers' | 'zreport' | 'profit';
 
 const Reports = () => {
+  const { t } = useTranslation();
   const [reportType, setReportType] = useState<ReportType>('sales');
   const [dateRange, setDateRange] = useState({
     startDate: new Date().toISOString().split('T')[0],
@@ -15,11 +17,11 @@ const Reports = () => {
   const [loading, setLoading] = useState(false);
 
   const reportTypes = [
-    { id: 'sales' as ReportType, name: 'Sales Summary', description: 'Total sales and revenue overview', icon: TrendingUp },
-    { id: 'products' as ReportType, name: 'Product-wise Sales', description: 'Best selling products analysis', icon: Package },
-    { id: 'customers' as ReportType, name: 'Customer Credit', description: 'Outstanding customer credits', icon: Users },
-    { id: 'zreport' as ReportType, name: 'Z-Report (Cash In/Out)', description: 'Daily cash reconciliation', icon: DollarSign },
-    { id: 'profit' as ReportType, name: 'Profit & Loss', description: 'Revenue vs cost analysis', icon: FileText },
+    { id: 'sales' as ReportType, name: t('reports.salesSummary'), description: t('reports.salesDesc'), icon: TrendingUp },
+    { id: 'products' as ReportType, name: t('reports.productSales'), description: t('reports.productDesc'), icon: Package },
+    { id: 'customers' as ReportType, name: t('reports.customerCredit'), description: t('reports.customerDesc'), icon: Users },
+    { id: 'zreport' as ReportType, name: t('reports.zReport'), description: t('reports.zReportDesc'), icon: DollarSign },
+    { id: 'profit' as ReportType, name: t('reports.profitLoss'), description: t('reports.profitDesc'), icon: FileText },
   ];
 
   const setQuickFilter = (filter: 'today' | 'yesterday' | 'week' | 'month' | 'lastMonth') => {
@@ -76,7 +78,7 @@ const Reports = () => {
           break;
       }
     } catch (error) {
-      toast.error('Failed to generate report');
+      toast.error(t('reports.generateFailed'));
     } finally {
       setLoading(false);
     }
@@ -85,7 +87,7 @@ const Reports = () => {
   const generateSalesReport = async () => {
     const billsResult = await window.api.getBills();
     if (!billsResult.success) {
-      toast.error('Failed to load bills');
+      toast.error(t('reports.loadBillsFailed'));
       return;
     }
 
@@ -260,7 +262,7 @@ const Reports = () => {
 
   const exportToCSV = () => {
     if (!reportData) {
-      toast.error('Please generate a report first');
+      toast.error(t('reports.generateFirst'));
       return;
     }
 
@@ -357,18 +359,18 @@ const Reports = () => {
     link.download = filename;
     link.click();
 
-    toast.success('Report exported to CSV');
+    toast.success(t('reports.exportSuccess'));
   };
 
   const exportToPDF = () => {
     if (!reportData) {
-      toast.error('Please generate a report first');
+      toast.error(t('reports.generateFirst'));
       return;
     }
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast.error('Please allow popups for PDF export');
+      toast.error(t('reports.allowPopups'));
       return;
     }
 
@@ -534,7 +536,7 @@ const Reports = () => {
       printWindow.print();
     }, 250);
 
-    toast.success('Opening PDF print dialog...');
+    toast.success(t('reports.openingPDF'));
   };
 
   const formatCurrency = (amount: number) => {
@@ -545,15 +547,15 @@ const Reports = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Reports & Analytics</h1>
-        <p className="text-gray-600">Generate comprehensive business reports and insights</p>
+        <h1 className="text-3xl font-bold text-gray-800">{t('reports.title')}</h1>
+        <p className="text-gray-600">{t('reports.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Report Type Selection */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-md p-4">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">Report Types</h2>
+            <h2 className="text-lg font-bold text-gray-800 mb-4">{t('reports.reportTypes')}</h2>
             <div className="space-y-2">
               {reportTypes.map((type) => (
                 <button
@@ -587,10 +589,10 @@ const Reports = () => {
 
             {/* Date Range Selector */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('reports.dateRange')}</label>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Start Date</label>
+                  <label className="block text-xs text-gray-600 mb-1">{t('reports.startDate')}</label>
                   <input
                     type="date"
                     value={dateRange.startDate}
@@ -601,7 +603,7 @@ const Reports = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">End Date</label>
+                  <label className="block text-xs text-gray-600 mb-1">{t('reports.endDate')}</label>
                   <input
                     type="date"
                     value={dateRange.endDate}
@@ -616,37 +618,37 @@ const Reports = () => {
 
             {/* Quick Date Filters */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Quick Filters</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('reports.quickFilters')}</label>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setQuickFilter('today')}
                   className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
                 >
-                  Today
+                  {t('reports.today')}
                 </button>
                 <button
                   onClick={() => setQuickFilter('yesterday')}
                   className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
                 >
-                  Yesterday
+                  {t('reports.yesterday')}
                 </button>
                 <button
                   onClick={() => setQuickFilter('week')}
                   className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
                 >
-                  Last 7 Days
+                  {t('reports.last7Days')}
                 </button>
                 <button
                   onClick={() => setQuickFilter('month')}
                   className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
                 >
-                  This Month
+                  {t('reports.thisMonth')}
                 </button>
                 <button
                   onClick={() => setQuickFilter('lastMonth')}
                   className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
                 >
-                  Last Month
+                  {t('reports.lastMonth')}
                 </button>
               </div>
             </div>
@@ -659,7 +661,7 @@ const Reports = () => {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
               >
                 <FileText size={20} />
-                {loading ? 'Generating...' : 'Generate Report'}
+                {loading ? t('reports.generating') : t('reports.generateReport')}
               </button>
               {reportData && (
                 <>
@@ -668,14 +670,14 @@ const Reports = () => {
                     className="flex items-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
                   >
                     <Download size={20} />
-                    CSV
+                    {t('common.csv')}
                   </button>
                   <button
                     onClick={exportToPDF}
                     className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
                   >
                     <Printer size={20} />
-                    PDF
+                    {t('common.pdf')}
                   </button>
                 </>
               )}
