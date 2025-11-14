@@ -1,10 +1,11 @@
 import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
 import { sql, gte } from 'drizzle-orm';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
-ipcMain.handle('dashboard:getStats', async () => {
+safeHandle('dashboard:getStats', async () => {
   try {
     const today = new Date().toISOString().split('T')[0];
 
@@ -65,7 +66,7 @@ ipcMain.handle('dashboard:getStats', async () => {
   }
 });
 
-ipcMain.handle('dashboard:getSalesChart', async (_, period: string) => {
+safeHandle('dashboard:getSalesChart', async (_, period: string) => {
   try {
     let dateFilter = '';
 

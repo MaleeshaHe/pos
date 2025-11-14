@@ -1,10 +1,11 @@
 import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
 import { and, gte, lte } from 'drizzle-orm';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
-ipcMain.handle('expenses:getAll', async (_, filters?: any) => {
+safeHandle('expenses:getAll', async (_, filters?: any) => {
   try {
     let query = db.select().from(schema.expenses);
 
@@ -24,7 +25,7 @@ ipcMain.handle('expenses:getAll', async (_, filters?: any) => {
   }
 });
 
-ipcMain.handle('expenses:create', async (_, data: any) => {
+safeHandle('expenses:create', async (_, data: any) => {
   try {
     const result = await db.insert(schema.expenses).values(data).returning();
     return { success: true, data: result[0] };
@@ -33,7 +34,7 @@ ipcMain.handle('expenses:create', async (_, data: any) => {
   }
 });
 
-ipcMain.handle('expenseCategories:getAll', async () => {
+safeHandle('expenseCategories:getAll', async () => {
   try {
     const categories = await db.select().from(schema.expenseCategories).all();
     return { success: true, data: categories };

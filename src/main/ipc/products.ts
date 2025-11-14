@@ -1,11 +1,12 @@
 import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
 import { eq, like, or, sql } from 'drizzle-orm';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
 // Get all products
-ipcMain.handle('products:getAll', async () => {
+safeHandle('products:getAll', async () => {
   try {
     const products = await db.select().from(schema.products)
       .where(eq(schema.products.isActive, true))
@@ -17,7 +18,7 @@ ipcMain.handle('products:getAll', async () => {
 });
 
 // Get product by ID
-ipcMain.handle('products:getById', async (_, id: number) => {
+safeHandle('products:getById', async (_, id: number) => {
   try {
     const product = await db.select().from(schema.products)
       .where(eq(schema.products.id, id))
@@ -29,7 +30,7 @@ ipcMain.handle('products:getById', async (_, id: number) => {
 });
 
 // Search products
-ipcMain.handle('products:search', async (_, query: string) => {
+safeHandle('products:search', async (_, query: string) => {
   try {
     const products = await db.select().from(schema.products)
       .where(
@@ -49,7 +50,7 @@ ipcMain.handle('products:search', async (_, query: string) => {
 });
 
 // Create product
-ipcMain.handle('products:create', async (_, data: any) => {
+safeHandle('products:create', async (_, data: any) => {
   try {
     const result = await db.insert(schema.products).values(data).returning();
     return { success: true, data: result[0] };
@@ -59,7 +60,7 @@ ipcMain.handle('products:create', async (_, data: any) => {
 });
 
 // Update product
-ipcMain.handle('products:update', async (_, id: number, data: any) => {
+safeHandle('products:update', async (_, id: number, data: any) => {
   try {
     const result = await db.update(schema.products)
       .set({ ...data, updatedAt: new Date().toISOString() })
@@ -72,7 +73,7 @@ ipcMain.handle('products:update', async (_, id: number, data: any) => {
 });
 
 // Delete product (soft delete)
-ipcMain.handle('products:delete', async (_, id: number) => {
+safeHandle('products:delete', async (_, id: number) => {
   try {
     await db.update(schema.products)
       .set({ isActive: false })
@@ -84,7 +85,7 @@ ipcMain.handle('products:delete', async (_, id: number) => {
 });
 
 // Get low stock products
-ipcMain.handle('products:getLowStock', async () => {
+safeHandle('products:getLowStock', async () => {
   try {
     const products = await db.select().from(schema.products)
       .where(

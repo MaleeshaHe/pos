@@ -1,9 +1,10 @@
 import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
-ipcMain.handle('categories:getAll', async () => {
+safeHandle('categories:getAll', async () => {
   try {
     const categories = await db.select().from(schema.categories).all();
     return { success: true, data: categories };
@@ -12,7 +13,7 @@ ipcMain.handle('categories:getAll', async () => {
   }
 });
 
-ipcMain.handle('categories:create', async (_, data: any) => {
+safeHandle('categories:create', async (_, data: any) => {
   try {
     const result = await db.insert(schema.categories).values(data).returning();
     return { success: true, data: result[0] };

@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
@@ -11,7 +12,7 @@ function hashPassword(password: string): string {
 
 let currentUser: any = null;
 
-ipcMain.handle('users:login', async (_, username: string, password: string) => {
+safeHandle('users:login', async (_, username: string, password: string) => {
   try {
     const hashedPassword = hashPassword(password);
     const user = await db.select().from(schema.users)
@@ -46,11 +47,11 @@ ipcMain.handle('users:login', async (_, username: string, password: string) => {
   }
 });
 
-ipcMain.handle('users:getCurrent', async () => {
+safeHandle('users:getCurrent', async () => {
   return { success: true, data: currentUser };
 });
 
-ipcMain.handle('users:getAll', async () => {
+safeHandle('users:getAll', async () => {
   try {
     const users = await db.select({
       id: schema.users.id,
@@ -69,7 +70,7 @@ ipcMain.handle('users:getAll', async () => {
   }
 });
 
-ipcMain.handle('users:create', async (_, data: any) => {
+safeHandle('users:create', async (_, data: any) => {
   try {
     const hashedPassword = hashPassword(data.password);
     const result = await db.insert(schema.users).values({

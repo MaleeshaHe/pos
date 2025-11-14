@@ -1,10 +1,11 @@
 import { ipcMain } from 'electron';
 import { getDatabase, schema } from '../db';
 import { eq } from 'drizzle-orm';
+import { safeHandle } from './ipcHelpers';
 
 const db = getDatabase();
 
-ipcMain.handle('settings:getAll', async () => {
+safeHandle('settings:getAll', async () => {
   try {
     const settings = await db.select().from(schema.settings).all();
     const settingsMap: Record<string, string> = {};
@@ -17,7 +18,7 @@ ipcMain.handle('settings:getAll', async () => {
   }
 });
 
-ipcMain.handle('settings:get', async (_, key: string) => {
+safeHandle('settings:get', async (_, key: string) => {
   try {
     const setting = await db.select().from(schema.settings)
       .where(eq(schema.settings.key, key))
@@ -28,7 +29,7 @@ ipcMain.handle('settings:get', async (_, key: string) => {
   }
 });
 
-ipcMain.handle('settings:update', async (_, key: string, value: string) => {
+safeHandle('settings:update', async (_, key: string, value: string) => {
   try {
     await db.insert(schema.settings).values({ key, value })
       .onConflictDoUpdate({
