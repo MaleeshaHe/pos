@@ -219,6 +219,10 @@ const POS = () => {
         subtotal: getSubtotal(),
         discount: calculateGlobalDiscount(),
         total: calculateFinalTotal(),
+        paymentMethod: 'cash', // Default for held bills
+        paidAmount: 0,
+        changeAmount: 0,
+        creditAmount: 0,
         status: 'held',
         items: items.map((item) => ({
           productId: item.productId,
