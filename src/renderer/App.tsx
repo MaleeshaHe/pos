@@ -8,6 +8,7 @@ import Products from './pages/Products';
 import Customers from './pages/Customers';
 import Suppliers from './pages/Suppliers';
 import Purchases from './pages/Purchases';
+import Transactions from './pages/Transactions';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
@@ -43,6 +44,7 @@ function App() {
             <Route path="customers" element={<Customers />} />
             <Route path="suppliers" element={<Suppliers />} />
             <Route path="purchases" element={<Purchases />} />
+            <Route path="transactions" element={<Transactions />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
           </Route>

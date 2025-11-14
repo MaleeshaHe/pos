@@ -6,6 +6,7 @@ import {
   Users,
   Truck,
   ShoppingBag,
+  Receipt,
   FileText,
   Settings,
   LogOut,
@@ -32,6 +33,7 @@ const Layout = () => {
     { path: '/customers', icon: Users, label: 'Customers' },
     { path: '/suppliers', icon: Truck, label: 'Suppliers' },
     { path: '/purchases', icon: ShoppingBag, label: 'Purchases' },
+    { path: '/transactions', icon: Receipt, label: 'Transactions' },
     { path: '/reports', icon: FileText, label: 'Reports' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
