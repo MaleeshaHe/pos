@@ -16,12 +16,17 @@ import {
   Percent,
   ScanBarcode,
   Clock,
+  FileText,
+  AlertTriangle,
+  UserPlus,
+  Keyboard,
 } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
 import { useAuthStore } from '../stores/authStore';
 import PaymentModal from '../components/PaymentModal';
 import HoldBillsModal from '../components/HoldBillsModal';
 import ReturnBillModal from '../components/ReturnBillModal';
+import QuickAddCustomerModal from '../components/QuickAddCustomerModal';
 
 interface Product {
   id: number;
@@ -51,8 +56,13 @@ const POS = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [showHoldBills, setShowHoldBills] = useState(false);
   const [showReturnBill, setShowReturnBill] = useState(false);
+  const [showQuickAddCustomer, setShowQuickAddCustomer] = useState(false);
+  const [showLowStockWarning, setShowLowStockWarning] = useState(false);
+  const [lowStockProduct, setLowStockProduct] = useState<Product | null>(null);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [globalDiscount, setGlobalDiscount] = useState(0);
   const [globalDiscountType, setGlobalDiscountType] = useState<'percentage' | 'amount'>('percentage');
+  const [billNotes, setBillNotes] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const barcodeBuffer = useRef<string>('');
   const barcodeTimer = useRef<NodeJS.Timeout>();
@@ -64,7 +74,7 @@ const POS = () => {
     loadProducts();
     loadCustomers();
 
-    // Setup barcode scanner listener
+    // Setup keyboard shortcuts and barcode scanner listener
     const handleKeyPress = (e: KeyboardEvent) => {
       // Ignore if typing in input fields (except barcode search)
       if (e.target instanceof HTMLInputElement && e.target !== searchInputRef.current) {
@@ -91,12 +101,73 @@ const POS = () => {
       }
     };
 
+    // Keyboard shortcuts (F1-F6)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent default for function keys
+      if (e.key.startsWith('F') && ['F1', 'F2', 'F3', 'F4', 'F5', 'F6'].includes(e.key)) {
+        e.preventDefault();
+      }
+
+      // F1 - Focus product search
+      if (e.key === 'F1') {
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        toast.success('Search activated', { icon: '🔍', duration: 1000 });
+      }
+
+      // F2 - New Bill (Clear cart)
+      if (e.key === 'F2') {
+        if (items.length > 0) {
+          if (confirm('Clear current cart and start new bill?')) {
+            handleNewBill();
+            toast.success('New bill started', { icon: '🆕', duration: 1000 });
+          }
+        } else {
+          handleNewBill();
+          toast.success('New bill started', { icon: '🆕', duration: 1000 });
+        }
+      }
+
+      // F3 - Print / Checkout
+      if (e.key === 'F3') {
+        if (items.length > 0) {
+          handleCheckout();
+          toast.success('Opening payment', { icon: '🖨️', duration: 1000 });
+        } else {
+          toast.error('Cart is empty!');
+        }
+      }
+
+      // F4 - Quick Add Customer
+      if (e.key === 'F4') {
+        setShowQuickAddCustomer(true);
+        toast.success('Add customer', { icon: '👤', duration: 1000 });
+      }
+
+      // F5 - Hold Bill
+      if (e.key === 'F5') {
+        if (items.length > 0) {
+          handleHoldBill();
+        } else {
+          toast.error('Cart is empty!');
+        }
+      }
+
+      // F6 - Resume Held Bills
+      if (e.key === 'F6') {
+        setShowHoldBills(true);
+        toast.success('Held bills', { icon: '⏸️', duration: 1000 });
+      }
+    };
+
     window.addEventListener('keypress', handleKeyPress);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keypress', handleKeyPress);
+      window.removeEventListener('keydown', handleKeyDown);
       if (barcodeTimer.current) clearTimeout(barcodeTimer.current);
     };
-  }, []);
+  }, [items]);
 
   useEffect(() => {
     // Auto-focus search on mount and after actions
@@ -141,6 +212,15 @@ const POS = () => {
     }
   };
 
+  const handleNewBill = () => {
+    clearCart();
+    setSelectedCustomer(null);
+    setGlobalDiscount(0);
+    setGlobalDiscountType('percentage');
+    setBillNotes('');
+    searchInputRef.current?.focus();
+  };
+
   const handleAddToCart = (product: Product) => {
     if (product.stock <= 0) {
       toast.error(t('pos.outOfStock') || 'Product out of stock!');
@@ -148,9 +228,22 @@ const POS = () => {
     }
 
     const existingItem = items.find((item) => item.productId === product.id);
+    const currentCartQty = existingItem ? existingItem.quantity : 0;
+
     if (existingItem && existingItem.quantity >= product.stock) {
       toast.error(t('pos.notEnoughStock') || 'Not enough stock available!');
       return;
+    }
+
+    // Low stock warning (only 1 or 2 pieces left after adding)
+    const remainingStock = product.stock - currentCartQty - 1;
+    if (remainingStock === 0) {
+      // Last piece warning
+      setLowStockProduct(product);
+      setShowLowStockWarning(true);
+    } else if (remainingStock === 1) {
+      // Only 1 piece will remain
+      toast.warning(`⚠️ Only 1 piece left after this!`, { duration: 2000 });
     }
 
     addItem({
@@ -224,6 +317,7 @@ const POS = () => {
         changeAmount: 0,
         creditAmount: 0,
         status: 'held',
+        notes: billNotes || null,
         items: items.map((item) => ({
           productId: item.productId,
           productName: item.nameEn || item.productName,
@@ -238,9 +332,7 @@ const POS = () => {
 
       if (result.success) {
         toast.success('Bill saved to hold list!');
-        clearCart();
-        setSelectedCustomer(null);
-        setGlobalDiscount(0);
+        handleNewBill();
       } else {
         toast.error(result.error || 'Failed to hold bill');
       }
@@ -311,6 +403,7 @@ const POS = () => {
         changeAmount: paymentData.changeAmount,
         creditAmount: paymentData.creditAmount,
         splitPayments: paymentData.splitPayments,
+        notes: billNotes || null,
         items: items.map((item) => ({
           productId: item.productId,
           productName: item.nameEn || item.productName,
@@ -331,10 +424,7 @@ const POS = () => {
           await handlePrintReceipt(result.data);
         }
 
-        clearCart();
-        setSelectedCustomer(null);
-        setGlobalDiscount(0);
-        setGlobalDiscountType('percentage');
+        handleNewBill();
         setShowPayment(false);
 
         // Reload products to update stock
@@ -349,9 +439,48 @@ const POS = () => {
   };
 
   const handlePrintReceipt = async (bill: any) => {
-    // Receipt printing will be implemented
-    console.log('Printing receipt for bill:', bill);
-    toast.success('Receipt sent to printer!');
+    try {
+      // Dynamically import the receipt printer utility
+      const { ReceiptPrinter, getReceiptSettings } = await import('../utils/receiptPrinter');
+
+      // Get receipt settings from system settings
+      const receiptSettings = await getReceiptSettings();
+
+      // Add language from current i18n
+      receiptSettings.language = i18n.language as 'en' | 'si';
+
+      // Create receipt printer instance
+      const printer = new ReceiptPrinter(receiptSettings);
+
+      // Prepare bill data for receipt
+      const billData = {
+        billNumber: bill.billNumber,
+        createdAt: bill.createdAt,
+        cashierName: user?.fullName || 'Cashier',
+        customerName: selectedCustomer?.name,
+        items: bill.items || items.map((item) => ({
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount,
+          subtotal: item.subtotal,
+        })),
+        subtotal: bill.subtotal || getSubtotal(),
+        discount: bill.discount || 0,
+        total: bill.total || calculateFinalTotal(),
+        paymentMethod: bill.paymentMethod,
+        paidAmount: bill.paidAmount,
+        changeAmount: bill.changeAmount,
+        notes: bill.notes || billNotes,
+      };
+
+      // Print receipt
+      printer.printReceipt(billData);
+      toast.success('Receipt sent to printer! 🖨️');
+    } catch (error) {
+      console.error('Receipt printing error:', error);
+      toast.error('Failed to print receipt');
+    }
   };
 
   return (
@@ -371,6 +500,13 @@ const POS = () => {
           {/* Action Buttons */}
           <div className="flex gap-2">
             <button
+              onClick={() => setShowKeyboardHelp(!showKeyboardHelp)}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+              title="Keyboard Shortcuts (F1-F6)"
+            >
+              <Keyboard size={18} />
+            </button>
+            <button
               onClick={() => setShowHoldBills(true)}
               className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-medium"
             >
@@ -386,6 +522,42 @@ const POS = () => {
             </button>
           </div>
         </div>
+
+        {/* Keyboard Shortcuts Help */}
+        {showKeyboardHelp && (
+          <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+              <Keyboard size={18} />
+              Keyboard Shortcuts
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <kbd className="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm font-mono text-xs">F1</kbd>
+                <span className="text-gray-700">Product Search</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <kbd className="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm font-mono text-xs">F2</kbd>
+                <span className="text-gray-700">New Bill</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <kbd className="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm font-mono text-xs">F3</kbd>
+                <span className="text-gray-700">Checkout</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <kbd className="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm font-mono text-xs">F4</kbd>
+                <span className="text-gray-700">Add Customer</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <kbd className="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm font-mono text-xs">F5</kbd>
+                <span className="text-gray-700">Hold Bill</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <kbd className="px-2 py-1 bg-white border border-gray-300 rounded shadow-sm font-mono text-xs">F6</kbd>
+                <span className="text-gray-700">Resume Bills</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="mb-6">
@@ -443,21 +615,30 @@ const POS = () => {
             <User size={16} className="inline mr-1" />
             {t('pos.customer') || 'Customer'}
           </label>
-          <select
-            value={selectedCustomer?.id || ''}
-            onChange={(e) => {
-              const customer = customers.find((c) => c.id === Number(e.target.value));
-              setSelectedCustomer(customer || null);
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            <option value="">{t('pos.walkInCustomer') || 'Walk-in Customer'}</option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.name} {customer.phone && `- ${customer.phone}`}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-2 mb-2">
+            <select
+              value={selectedCustomer?.id || ''}
+              onChange={(e) => {
+                const customer = customers.find((c) => c.id === Number(e.target.value));
+                setSelectedCustomer(customer || null);
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            >
+              <option value="">{t('pos.walkInCustomer') || 'Walk-in Customer'}</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name} {customer.phone && `- ${customer.phone}`}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => setShowQuickAddCustomer(true)}
+              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              title="Quick Add Customer (F4)"
+            >
+              <UserPlus size={18} />
+            </button>
+          </div>
           {selectedCustomer && (
             <p className="text-xs text-gray-600 mt-1">
               Credit Limit: {formatCurrency(selectedCustomer.creditLimit)} |
@@ -613,6 +794,23 @@ const POS = () => {
             </div>
           </div>
 
+          {/* Bill Notes */}
+          {items.length > 0 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <FileText size={14} className="inline mr-1" />
+                Bill Notes (Optional)
+              </label>
+              <textarea
+                value={billNotes}
+                onChange={(e) => setBillNotes(e.target.value)}
+                placeholder="e.g., Delivery tomorrow, Repair included..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none"
+                rows={2}
+              />
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="space-y-2">
             <button
@@ -655,6 +853,66 @@ const POS = () => {
         isOpen={showReturnBill}
         onClose={() => setShowReturnBill(false)}
       />
+
+      <QuickAddCustomerModal
+        isOpen={showQuickAddCustomer}
+        onClose={() => setShowQuickAddCustomer(false)}
+        onSuccess={(newCustomer) => {
+          loadCustomers();
+          setSelectedCustomer(newCustomer);
+          setShowQuickAddCustomer(false);
+          toast.success(`Customer ${newCustomer.name} added successfully!`);
+        }}
+      />
+
+      {/* Low Stock Warning Dialog */}
+      {showLowStockWarning && lowStockProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="text-yellow-600" size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Last Piece Warning!</h3>
+                <p className="text-sm text-gray-600">Low stock alert</p>
+              </div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-gray-800 mb-2">
+                <span className="font-semibold">{lowStockProduct.name}</span> is now at its last piece!
+              </p>
+              <p className="text-xs text-gray-600">
+                SKU: {lowStockProduct.sku} | Remaining: <span className="font-bold text-red-600">0 after this sale</span>
+              </p>
+            </div>
+            <p className="text-sm text-gray-700 mb-4">
+              This is the final unit in stock. Consider reordering soon to avoid stockouts.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowLowStockWarning(false);
+                  setLowStockProduct(null);
+                }}
+                className="flex-1 py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium"
+              >
+                Got it
+              </button>
+              <button
+                onClick={() => {
+                  setShowLowStockWarning(false);
+                  setLowStockProduct(null);
+                  // Could navigate to reorder page in future
+                }}
+                className="flex-1 py-2 px-4 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium"
+              >
+                Remind Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
