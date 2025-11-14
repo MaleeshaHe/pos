@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('api', {
   getHeldBills: () => ipcRenderer.invoke('bills:getHeld'),
   holdBill: (data: any) => ipcRenderer.invoke('bills:hold', data),
   resumeBill: (id: number) => ipcRenderer.invoke('bills:resume', id),
+  deleteHeldBill: (id: number) => ipcRenderer.invoke('bills:deleteHeld', id),
 
   // Credit Payments
   createCreditPayment: (data: any) => ipcRenderer.invoke('creditPayments:create', data),

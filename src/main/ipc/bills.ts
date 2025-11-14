@@ -247,3 +247,110 @@ ipcMain.handle('bills:getByCustomer', async (_, customerId: number) => {
     return { success: false, error: error.message };
   }
 });
+
+// Hold a bill (save as draft)
+ipcMain.handle('bills:hold', async (_, data: any) => {
+  try {
+    const billNumber = generateBillNumber();
+
+    // Create bill with isHeld = true
+    const [bill] = await db.insert(schema.bills).values({
+      billNumber,
+      customerId: data.customerId,
+      userId: data.userId,
+      subtotal: data.subtotal,
+      discount: data.discount || 0,
+      discountType: data.discountType || 'amount',
+      tax: data.tax || 0,
+      total: data.total,
+      paymentMethod: data.paymentMethod || 'cash',
+      paidAmount: 0,
+      changeAmount: 0,
+      creditAmount: 0,
+      isHeld: true, // Mark as held
+      notes: data.notes,
+    }).returning();
+
+    // Create bill items (don't update stock for held bills)
+    for (const item of data.items) {
+      await db.insert(schema.billItems).values({
+        billId: bill.id,
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount || 0,
+        subtotal: item.subtotal,
+      });
+    }
+
+    return { success: true, data: bill };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Get all held bills
+ipcMain.handle('bills:getHeld', async () => {
+  try {
+    const bills = await db.select().from(schema.bills)
+      .where(eq(schema.bills.isHeld, true))
+      .orderBy(desc(schema.bills.createdAt))
+      .all();
+
+    // Get items for each bill
+    const billsWithItems = await Promise.all(
+      bills.map(async (bill) => {
+        const items = await db.select().from(schema.billItems)
+          .where(eq(schema.billItems.billId, bill.id))
+          .all();
+
+        return { ...bill, items };
+      })
+    );
+
+    return { success: true, data: billsWithItems };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Resume a held bill
+ipcMain.handle('bills:resume', async (_, billId: number) => {
+  try {
+    // Get the held bill with items
+    const bill = await db.select().from(schema.bills)
+      .where(and(eq(schema.bills.id, billId), eq(schema.bills.isHeld, true)))
+      .get();
+
+    if (!bill) {
+      return { success: false, error: 'Held bill not found' };
+    }
+
+    const items = await db.select().from(schema.billItems)
+      .where(eq(schema.billItems.billId, billId))
+      .all();
+
+    // Return bill with items
+    return { success: true, data: { ...bill, items } };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Delete a held bill
+ipcMain.handle('bills:deleteHeld', async (_, billId: number) => {
+  try {
+    // First delete all bill items
+    await db.delete(schema.billItems)
+      .where(eq(schema.billItems.billId, billId));
+
+    // Then delete the bill
+    await db.delete(schema.bills)
+      .where(and(eq(schema.bills.id, billId), eq(schema.bills.isHeld, true)));
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});

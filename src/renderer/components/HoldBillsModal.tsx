@@ -55,10 +55,13 @@ const HoldBillsModal = ({ isOpen, onClose, onResume }: HoldBillsModalProps) => {
     }
 
     try {
-      // For now, we'll just delete it directly
-      // In production, you might want a dedicated API endpoint
-      toast.success('Held bill deleted');
-      loadHeldBills();
+      const result = await window.api.deleteHeldBill(billId);
+      if (result.success) {
+        toast.success('Held bill deleted');
+        loadHeldBills();
+      } else {
+        toast.error(result.error || 'Failed to delete bill');
+      }
     } catch (error) {
       toast.error('Failed to delete bill');
       console.error(error);
@@ -80,17 +83,28 @@ const HoldBillsModal = ({ isOpen, onClose, onResume }: HoldBillsModalProps) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Held Bills" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Held Bills${heldBills.length > 0 ? ` (${heldBills.length})` : ''}`}
+      size="lg"
+    >
       <div className="p-6">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600">Loading held bills...</p>
           </div>
         ) : heldBills.length === 0 ? (
           <div className="text-center py-12">
-            <Clock size={48} className="mx-auto mb-4 text-gray-400 opacity-50" />
-            <p className="text-gray-600">No held bills</p>
-            <p className="text-sm text-gray-500 mt-1">Bills on hold will appear here</p>
+            <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <Clock size={40} className="text-gray-400" />
+            </div>
+            <p className="text-lg font-semibold text-gray-700 mb-2">No held bills</p>
+            <p className="text-sm text-gray-500 mb-1">Press F5 or click "Hold Bill" to save a bill for later</p>
+            <p className="text-xs text-gray-400 mt-4">
+              💡 Tip: Held bills are automatically removed when resumed
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -150,6 +164,14 @@ const HoldBillsModal = ({ isOpen, onClose, onResume }: HoldBillsModalProps) => {
                         </p>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {/* Bill Notes */}
+                {bill.notes && (
+                  <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+                    <p className="text-gray-600 font-semibold mb-1">📝 Notes:</p>
+                    <p className="text-gray-700 italic">{bill.notes}</p>
                   </div>
                 )}
 

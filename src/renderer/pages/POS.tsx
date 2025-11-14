@@ -422,33 +422,72 @@ const POS = () => {
     }
   };
 
-  const handleResumeBill = (heldBill: any) => {
-    // Clear current cart
-    clearCart();
+  const handleResumeBill = async (heldBill: any) => {
+    try {
+      // Clear current cart
+      clearCart();
 
-    // Load held bill items into cart
-    heldBill.items.forEach((item: any) => {
-      addItem({
-        productId: item.productId,
-        productName: item.productName,
-        nameEn: item.productName,
-        nameSi: item.productName,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        discount: item.discount,
-        subtotal: item.subtotal,
-        currentStock: 999, // Will be validated on checkout
-      });
-    });
+      // Load held bill items into cart with proper stock validation
+      let hasStockIssues = false;
 
-    // Set customer if any
-    if (heldBill.customerId) {
-      const customer = customers.find((c) => c.id === heldBill.customerId);
-      setSelectedCustomer(customer || null);
+      for (const item of heldBill.items) {
+        // Find the current product to get latest stock
+        const currentProduct = allProducts.find((p) => p.id === item.productId);
+
+        if (!currentProduct) {
+          toast.error(`Product "${item.productName}" not found in inventory`);
+          hasStockIssues = true;
+          continue;
+        }
+
+        if (currentProduct.stock < item.quantity) {
+          toast.warning(
+            `${item.productName}: Only ${currentProduct.stock} available (held: ${item.quantity})`
+          );
+          hasStockIssues = true;
+        }
+
+        addItem({
+          productId: item.productId,
+          productName: item.productName,
+          nameEn: item.productName,
+          nameSi: currentProduct.nameSi,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount,
+          subtotal: item.subtotal,
+          currentStock: currentProduct.stock,
+        });
+      }
+
+      // Restore customer if any
+      if (heldBill.customerId) {
+        const customer = customers.find((c) => c.id === heldBill.customerId);
+        setSelectedCustomer(customer || null);
+        if (customer) {
+          loadCustomerPurchases(customer.id);
+        }
+      }
+
+      // Restore bill notes
+      if (heldBill.notes) {
+        setBillNotes(heldBill.notes);
+      }
+
+      // Delete the held bill from database
+      await window.api.deleteHeldBill(heldBill.id);
+
+      setShowHoldBills(false);
+
+      if (hasStockIssues) {
+        toast.success('Bill resumed! Please check stock warnings.');
+      } else {
+        toast.success('Bill resumed successfully!');
+      }
+    } catch (error) {
+      console.error('Error resuming bill:', error);
+      toast.error('Failed to resume bill');
     }
-
-    setShowHoldBills(false);
-    toast.success('Bill resumed!');
   };
 
   const calculateGlobalDiscount = () => {
