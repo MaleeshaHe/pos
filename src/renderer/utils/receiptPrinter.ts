@@ -414,13 +414,64 @@ export class ReceiptPrinter {
    */
   public printReceipt(billData: BillData): void {
     const receiptHtml = this.generateReceipt(billData);
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
 
-    if (printWindow) {
-      printWindow.document.write(receiptHtml);
-      printWindow.document.close();
+    try {
+      // Try to open in new window first
+      const printWindow = window.open('', '_blank', 'width=400,height=600');
+
+      if (printWindow) {
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+      } else {
+        // Popup blocked - use iframe fallback
+        this.printReceiptWithIframe(receiptHtml);
+      }
+    } catch (error) {
+      // Fallback to iframe method
+      this.printReceiptWithIframe(receiptHtml);
+    }
+  }
+
+  /**
+   * Fallback method: Print using iframe (works even with popup blockers)
+   */
+  private printReceiptWithIframe(receiptHtml: string): void {
+    // Create hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+
+    if (iframeDoc) {
+      iframeDoc.open();
+      iframeDoc.write(receiptHtml);
+      iframeDoc.close();
+
+      // Wait for content to load, then print
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow?.print();
+
+          // Remove iframe after printing
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
+        }, 100);
+      };
+
+      // Trigger onload manually if it doesn't fire
+      if (iframeDoc.readyState === 'complete') {
+        iframe.onload?.(new Event('load'));
+      }
     } else {
-      throw new Error('Failed to open print window. Please check your popup blocker settings.');
+      throw new Error('Failed to create print document. Please check your browser settings.');
     }
   }
 }
