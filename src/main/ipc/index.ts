@@ -8,6 +8,7 @@ import './dashboard';
 import './categories';
 import './brands';
 import './suppliers';
+import './purchases';
 import './expenses';
 import './creditPayments';
 

@@ -65,6 +65,16 @@ contextBridge.exposeInMainWorld('api', {
   getSuppliers: () => ipcRenderer.invoke('suppliers:getAll'),
   createSupplier: (data: any) => ipcRenderer.invoke('suppliers:create', data),
 
+  // Purchases
+  getPurchases: () => ipcRenderer.invoke('purchases:getAll'),
+  getPurchase: (id: number) => ipcRenderer.invoke('purchases:getById', id),
+  createPurchase: (data: any) => ipcRenderer.invoke('purchases:create', data),
+  updatePurchase: (id: number, data: any) => ipcRenderer.invoke('purchases:update', id, data),
+  getPurchaseItems: (purchaseId: number) => ipcRenderer.invoke('purchases:getItems', purchaseId),
+
+  // Stock Logs
+  createStockLog: (data: any) => ipcRenderer.invoke('stockLogs:create', data),
+
   // Expenses
   getExpenses: (filters?: any) => ipcRenderer.invoke('expenses:getAll', filters),
   createExpense: (data: any) => ipcRenderer.invoke('expenses:create', data),
