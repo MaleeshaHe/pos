@@ -159,57 +159,6 @@ ipcMain.handle('bills:getByNumber', async (_, billNumber: string) => {
   }
 });
 
-ipcMain.handle('bills:getHeld', async () => {
-  try {
-    const bills = await db.select().from(schema.bills)
-      .where(eq(schema.bills.isHeld, true))
-      .all();
-    return { success: true, data: bills };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('bills:hold', async (_, data: any) => {
-  try {
-    const billNumber = generateBillNumber();
-    const [bill] = await db.insert(schema.bills).values({
-      ...data,
-      billNumber,
-      isHeld: true,
-      status: 'held',
-    }).returning();
-
-    // Save bill items
-    for (const item of data.items) {
-      await db.insert(schema.billItems).values({
-        billId: bill.id,
-        ...item,
-      });
-    }
-
-    return { success: true, data: bill };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('bills:resume', async (_, id: number) => {
-  try {
-    const bill = await db.select().from(schema.bills)
-      .where(eq(schema.bills.id, id))
-      .get();
-
-    const items = await db.select().from(schema.billItems)
-      .where(eq(schema.billItems.billId, id))
-      .all();
-
-    return { success: true, data: { ...bill, items } };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-});
-
 ipcMain.handle('bills:getItems', async (_, billId: number) => {
   try {
     const items = await db.select().from(schema.billItems)
