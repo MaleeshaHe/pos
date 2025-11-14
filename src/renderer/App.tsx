@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import POS from './pages/POS';
 import Products from './pages/Products';
 import Customers from './pages/Customers';
+import Suppliers from './pages/Suppliers';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
@@ -39,6 +40,7 @@ function App() {
             <Route path="pos" element={<POS />} />
             <Route path="products" element={<Products />} />
             <Route path="customers" element={<Customers />} />
+            <Route path="suppliers" element={<Suppliers />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
           </Route>
