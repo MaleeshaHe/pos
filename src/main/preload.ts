@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld('api', {
   createBill: (data: any) => ipcRenderer.invoke('bills:create', data),
   getBills: (filters?: any) => ipcRenderer.invoke('bills:getAll', filters),
   getBill: (id: number) => ipcRenderer.invoke('bills:getById', id),
+  getBillById: (id: number) => ipcRenderer.invoke('bills:getById', id),
+  getBillItems: (billId: number) => ipcRenderer.invoke('bills:getItems', billId),
   getBillByNumber: (billNumber: string) => ipcRenderer.invoke('bills:getByNumber', billNumber),
   getHeldBills: () => ipcRenderer.invoke('bills:getHeld'),
   holdBill: (data: any) => ipcRenderer.invoke('bills:hold', data),

@@ -209,3 +209,15 @@ ipcMain.handle('bills:resume', async (_, id: number) => {
     return { success: false, error: error.message };
   }
 });
+
+ipcMain.handle('bills:getItems', async (_, billId: number) => {
+  try {
+    const items = await db.select().from(schema.billItems)
+      .where(eq(schema.billItems.billId, billId))
+      .all();
+
+    return { success: true, data: items };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
