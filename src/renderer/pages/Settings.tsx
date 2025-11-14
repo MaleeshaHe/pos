@@ -46,11 +46,8 @@ const Settings = () => {
     try {
       const result = await window.api.getSettings();
       if (result.success) {
-        const settingsObj: Record<string, string> = {};
-        result.data.forEach((setting: any) => {
-          settingsObj[setting.key] = setting.value;
-        });
-        setSettings(settingsObj);
+        // result.data is already a Record<string, string> from the IPC handler
+        setSettings(result.data || {});
       }
     } catch (error) {
       toast.error('Failed to load settings');
