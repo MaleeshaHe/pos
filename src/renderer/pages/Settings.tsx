@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { Save, Store, Globe, Receipt, DollarSign } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Settings = () => {
+  const { t, i18n } = useTranslation();
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -11,6 +13,13 @@ const Settings = () => {
     loadSettings();
   }, []);
 
+  useEffect(() => {
+    // Update i18n language when settings load
+    if (settings.language) {
+      i18n.changeLanguage(settings.language);
+    }
+  }, [settings.language, i18n]);
+
   const loadSettings = async () => {
     try {
       const result = await window.api.getSettings();
@@ -18,7 +27,7 @@ const Settings = () => {
         setSettings(result.data);
       }
     } catch (error) {
-      toast.error('Failed to load settings');
+      toast.error(t('settings.settingsFailed'));
     } finally {
       setLoading(false);
     }
@@ -31,9 +40,9 @@ const Settings = () => {
       for (const [key, value] of Object.entries(settings)) {
         await window.api.updateSetting(key, value);
       }
-      toast.success('Settings saved successfully!');
+      toast.success(t('settings.settingsSaved'));
     } catch (error) {
-      toast.error('Failed to save settings');
+      toast.error(t('settings.settingsFailed'));
     } finally {
       setSaving(false);
     }
@@ -41,6 +50,11 @@ const Settings = () => {
 
   const updateSetting = (key: string, value: string) => {
     setSettings({ ...settings, [key]: value });
+
+    // If changing language, update i18n immediately
+    if (key === 'language') {
+      i18n.changeLanguage(value);
+    }
   };
 
   if (loading) {
@@ -56,8 +70,8 @@ const Settings = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
-          <p className="text-gray-600">Configure your POS system</p>
+          <h1 className="text-3xl font-bold text-gray-800">{t('settings.title')}</h1>
+          <p className="text-gray-600">{t('settings.subtitle')}</p>
         </div>
         <button
           onClick={handleSave}
@@ -65,7 +79,7 @@ const Settings = () => {
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
         >
           <Save size={20} />
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? t('settings.saving') : t('settings.saveChanges')}
         </button>
       </div>
 
@@ -74,12 +88,12 @@ const Settings = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <Store className="text-blue-600" size={24} />
-            <h2 className="text-xl font-bold text-gray-800">Store Information</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.storeInfo')}</h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Store Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.storeName')}</label>
               <input
                 type="text"
                 value={settings.store_name || ''}
@@ -89,7 +103,7 @@ const Settings = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.address')}</label>
               <textarea
                 value={settings.store_address || ''}
                 onChange={(e) => updateSetting('store_address', e.target.value)}
@@ -99,7 +113,7 @@ const Settings = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.phone')}</label>
               <input
                 type="text"
                 value={settings.store_phone || ''}
@@ -114,24 +128,24 @@ const Settings = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <Globe className="text-blue-600" size={24} />
-            <h2 className="text-xl font-bold text-gray-800">Language & Regional</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.languageRegional')}</h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.language')}</label>
               <select
                 value={settings.language || 'en'}
                 onChange={(e) => updateSetting('language', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="en">English</option>
-                <option value="si">Sinhala (සිංහල)</option>
+                <option value="si">සිංහල (Sinhala)</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.currency')}</label>
               <select
                 value={settings.currency || 'LKR'}
                 onChange={(e) => updateSetting('currency', e.target.value)}
@@ -149,12 +163,12 @@ const Settings = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <Receipt className="text-blue-600" size={24} />
-            <h2 className="text-xl font-bold text-gray-800">Receipt Settings</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.receiptSettings')}</h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Footer</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.receiptFooter')}</label>
               <textarea
                 value={settings.receipt_footer || ''}
                 onChange={(e) => updateSetting('receipt_footer', e.target.value)}
@@ -170,12 +184,12 @@ const Settings = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <DollarSign className="text-blue-600" size={24} />
-            <h2 className="text-xl font-bold text-gray-800">Business Settings</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.businessSettings')}</h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.taxRate')}</label>
               <input
                 type="number"
                 value={settings.tax_rate || '0'}
@@ -189,7 +203,7 @@ const Settings = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Low Stock Alert Level
+                {t('settings.lowStockAlert')}
               </label>
               <input
                 type="number"
@@ -202,7 +216,7 @@ const Settings = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Loyalty Points Rate (per 100 currency)
+                {t('settings.loyaltyPointsRate')}
               </label>
               <input
                 type="number"
