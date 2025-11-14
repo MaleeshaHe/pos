@@ -50,7 +50,7 @@ const Settings = () => {
         setSettings(result.data || {});
       }
     } catch (error) {
-      toast.error('Failed to load settings');
+      toast.error(t('settings.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ const Settings = () => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     applyTheme(newTheme, accentColor, fontSize);
-    toast.success(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`);
+    toast.success(t(newTheme === 'dark' ? 'settings.darkModeActivated' : 'settings.lightModeActivated'));
   };
 
   const handleAccentChange = (color: string) => {
@@ -101,7 +101,7 @@ const Settings = () => {
     setFontSize(size);
     localStorage.setItem('fontSize', size);
     applyTheme(theme, accentColor, size);
-    toast.success('Font size updated');
+    toast.success(t('settings.fontSizeUpdated'));
   };
 
   const handleSave = async () => {
@@ -110,7 +110,7 @@ const Settings = () => {
       for (const [key, value] of Object.entries(settings)) {
         await window.api.updateSetting(key, value);
       }
-      toast.success('Settings saved successfully');
+      toast.success(t('settings.settingsSaved'));
     } catch (error) {
       toast.error('Failed to save settings');
     } finally {
@@ -203,7 +203,7 @@ const Settings = () => {
     link.download = `pos-backup-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
 
-    toast.success('Backup created successfully');
+    toast.success(t('settings.backupCreatedSuccess'));
   };
 
   const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,12 +215,12 @@ const Settings = () => {
           const backupData = JSON.parse(event.target?.result as string);
           if (backupData.settings) {
             setSettings(backupData.settings);
-            toast.success('Backup restored. Click Save to apply changes.');
+            toast.success(t('settings.backupRestored'));
           } else {
-            toast.error('Invalid backup file');
+            toast.error(t('settings.invalidBackupFile'));
           }
         } catch (error) {
-          toast.error('Failed to restore backup');
+          toast.error(t('settings.restoreFailed'));
         }
       };
       reader.readAsText(file);
@@ -228,11 +228,11 @@ const Settings = () => {
   };
 
   const tabs = [
-    { id: 'store' as TabType, name: 'Store & Branding', icon: Store },
-    { id: 'printer' as TabType, name: 'Printer', icon: Printer },
-    { id: 'theme' as TabType, name: 'Theme & UI', icon: Palette },
-    { id: 'language' as TabType, name: 'Language', icon: Globe },
-    { id: 'backup' as TabType, name: 'Backup & Restore', icon: Database },
+    { id: 'store' as TabType, name: t('settings.tabStore'), icon: Store },
+    { id: 'printer' as TabType, name: t('settings.tabPrinter'), icon: Printer },
+    { id: 'theme' as TabType, name: t('settings.tabTheme'), icon: Palette },
+    { id: 'language' as TabType, name: t('settings.tabLanguage'), icon: Globe },
+    { id: 'backup' as TabType, name: t('settings.tabBackup'), icon: Database },
   ];
 
   if (loading) {
@@ -248,8 +248,8 @@ const Settings = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">System Settings</h1>
-          <p className="text-gray-600">Configure your POS system preferences</p>
+          <h1 className="text-3xl font-bold text-gray-800">{t('settings.systemSettings')}</h1>
+          <p className="text-gray-600">{t('settings.configurePreferences')}</p>
         </div>
         <button
           onClick={handleSave}
@@ -257,7 +257,7 @@ const Settings = () => {
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
         >
           <Save size={20} />
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? t('settings.saving') : t('settings.saveChanges')}
         </button>
       </div>
 
@@ -287,11 +287,11 @@ const Settings = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         {activeTab === 'store' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-800">Store & Branding Settings</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.storeBrandingSettings')}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Store Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.storeName')}</label>
                 <input
                   type="text"
                   value={settings.store_name || ''}
@@ -302,7 +302,7 @@ const Settings = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.storePhone')}</label>
                 <input
                   type="text"
                   value={settings.store_phone || ''}
@@ -313,7 +313,7 @@ const Settings = () => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.storeAddress')}</label>
                 <textarea
                   value={settings.store_address || ''}
                   onChange={(e) => updateSetting('store_address', e.target.value)}
@@ -324,7 +324,7 @@ const Settings = () => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Store Logo (Receipt & Header)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.logoUpload')}</label>
                 <div className="flex items-center gap-4">
                   {settings.store_logo && (
                     <img
@@ -335,20 +335,20 @@ const Settings = () => {
                   )}
                   <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer">
                     <Image size={20} />
-                    Upload Logo
+                    {t('settings.uploadLogo')}
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   </label>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Recommended: 200x200px, PNG or JPG</p>
+                <p className="text-xs text-gray-500 mt-1">{t('settings.logoRecommendation')}</p>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Custom Receipt Message</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.customReceiptMessage')}</label>
                 <textarea
                   value={settings.receipt_footer || ''}
                   onChange={(e) => updateSetting('receipt_footer', e.target.value)}
                   rows={2}
-                  placeholder="Thank you for your business! Please come again."
+                  placeholder={t('settings.receiptMessagePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
@@ -358,25 +358,25 @@ const Settings = () => {
 
         {activeTab === 'printer' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-800">Printer Configuration</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.printerConfiguration')}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Default Printer</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.defaultPrinter')}</label>
                 <select
                   value={settings.default_printer || 'system'}
                   onChange={(e) => updateSetting('default_printer', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 >
-                  <option value="system">System Default</option>
-                  <option value="thermal">Thermal Printer</option>
-                  <option value="laser">Laser Printer</option>
-                  <option value="network">Network Printer</option>
+                  <option value="system">{t('settings.systemDefault')}</option>
+                  <option value="thermal">{t('settings.thermal')}</option>
+                  <option value="laser">{t('settings.laser')}</option>
+                  <option value="network">{t('settings.network')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Paper Size</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.paperSize')}</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => updateSetting('paper_size', '58mm')}
@@ -402,7 +402,7 @@ const Settings = () => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Auto-print Receipt</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.autoPrint')}</label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -410,7 +410,7 @@ const Settings = () => {
                     onChange={(e) => updateSetting('auto_print', e.target.checked ? 'true' : 'false')}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Automatically print receipt after completing sale</span>
+                  <span className="text-sm text-gray-700">{t('settings.autoPrint')}</span>
                 </label>
               </div>
 
@@ -420,7 +420,7 @@ const Settings = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
                 >
                   <TestTube size={20} />
-                  Test Print
+                  {t('settings.testPrint')}
                 </button>
                 <p className="text-xs text-gray-500 mt-2">Print a test receipt to verify printer configuration</p>
               </div>
@@ -430,11 +430,11 @@ const Settings = () => {
 
         {activeTab === 'theme' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-800">Theme & UI Settings</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.themeUISettings')}</h2>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Display Mode</label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">{t('settings.appearance')}</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => handleThemeChange('light')}
@@ -445,7 +445,7 @@ const Settings = () => {
                     }`}
                   >
                     <Sun size={24} />
-                    Light Mode
+                    {t('settings.lightMode')}
                   </button>
                   <button
                     onClick={() => handleThemeChange('dark')}
@@ -456,13 +456,13 @@ const Settings = () => {
                     }`}
                   >
                     <Moon size={24} />
-                    Dark Mode
+                    {t('settings.darkMode')}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Accent Color</label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">{t('settings.accentColor')}</label>
                 <div className="grid grid-cols-6 gap-3">
                   {[
                     { color: '#3b82f6', name: 'Blue' },
@@ -487,14 +487,14 @@ const Settings = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Font Size (Cashier Friendly)
+                  {t('settings.fontSize')}
                 </label>
                 <div className="grid grid-cols-4 gap-3">
                   {[
-                    { value: 'small', label: 'Small', size: '14px' },
-                    { value: 'medium', label: 'Medium', size: '16px' },
-                    { value: 'large', label: 'Large', size: '18px' },
-                    { value: 'extra-large', label: 'Extra Large', size: '20px' },
+                    { value: 'small', label: t('settings.small'), size: '14px' },
+                    { value: 'medium', label: t('settings.medium'), size: '16px' },
+                    { value: 'large', label: t('settings.large'), size: '18px' },
+                    { value: 'extra-large', label: t('settings.extraLarge'), size: '20px' },
                   ].map((item) => (
                     <button
                       key={item.value}
@@ -517,10 +517,10 @@ const Settings = () => {
 
         {activeTab === 'language' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-800">Language Settings</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.languageSettings')}</h2>
 
             <div className="max-w-md">
-              <label className="block text-sm font-medium text-gray-700 mb-3">Select Language</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">{t('settings.selectLanguage')}</label>
               <div className="space-y-3">
                 <button
                   onClick={() => updateSetting('language', 'en')}
@@ -532,10 +532,10 @@ const Settings = () => {
                 >
                   <span className="flex items-center gap-3">
                     <Globe size={24} />
-                    English
+                    {t('settings.english')}
                   </span>
                   {(settings.language || 'en') === 'en' && (
-                    <span className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs">Active</span>
+                    <span className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs">{t('settings.active')}</span>
                   )}
                 </button>
 
@@ -549,10 +549,10 @@ const Settings = () => {
                 >
                   <span className="flex items-center gap-3">
                     <Globe size={24} />
-                    සිංහල (Sinhala)
+                    {t('settings.sinhala')}
                   </span>
                   {settings.language === 'si' && (
-                    <span className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs">Active</span>
+                    <span className="px-3 py-1 bg-blue-500 text-white rounded-full text-xs">{t('settings.active')}</span>
                   )}
                 </button>
               </div>
@@ -562,16 +562,16 @@ const Settings = () => {
             </div>
 
             <div className="max-w-md">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('settings.currencySettings')}</label>
               <select
                 value={settings.currency || 'LKR'}
                 onChange={(e) => updateSetting('currency', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               >
-                <option value="LKR">Sri Lankan Rupee (LKR)</option>
-                <option value="USD">US Dollar (USD)</option>
-                <option value="EUR">Euro (EUR)</option>
-                <option value="GBP">British Pound (GBP)</option>
+                <option value="LKR">{t('settings.lkr')}</option>
+                <option value="USD">{t('settings.usd')}</option>
+                <option value="EUR">{t('settings.eur')}</option>
+                <option value="GBP">{t('settings.gbp')}</option>
               </select>
             </div>
           </div>
@@ -579,13 +579,13 @@ const Settings = () => {
 
         {activeTab === 'backup' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-800">Backup & Restore</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t('settings.backupRestoreSettings')}</h2>
 
             <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900 mb-2">Auto Daily Backup</h3>
+                <h3 className="font-semibold text-blue-900 mb-2">{t('settings.autoDailyBackup')}</h3>
                 <p className="text-sm text-blue-800 mb-3">
-                  Automatically backup your data every day at midnight to prevent data loss.
+                  {t('settings.enableAutoBackup')}
                 </p>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -594,44 +594,41 @@ const Settings = () => {
                     onChange={(e) => updateSetting('auto_backup', e.target.checked ? 'true' : 'false')}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-blue-900">Enable automatic daily backup</span>
+                  <span className="text-sm font-medium text-blue-900">{t('settings.enableAutoBackup')}</span>
                 </label>
               </div>
 
               <div>
-                <h3 className="font-semibold text-gray-800 mb-3">Manual Backup</h3>
+                <h3 className="font-semibold text-gray-800 mb-3">{t('settings.manualBackup')}</h3>
                 <button
                   onClick={handleBackup}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
                 >
                   <Download size={20} />
-                  Create Backup Now
+                  {t('settings.createBackup')}
                 </button>
                 <p className="text-sm text-gray-500 mt-2">
-                  Download a backup file of your current settings and data.
+                  {t('settings.backupDescription')}
                 </p>
               </div>
 
               <div>
-                <h3 className="font-semibold text-gray-800 mb-3">Restore from Backup</h3>
+                <h3 className="font-semibold text-gray-800 mb-3">{t('settings.restoreBackup')}</h3>
                 <label className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium cursor-pointer w-fit">
                   <Upload size={20} />
-                  Restore Backup
+                  {t('settings.restoreButton')}
                   <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
                 </label>
                 <p className="text-sm text-gray-500 mt-2">
-                  Upload a previously saved backup file to restore your settings.
+                  {t('settings.restoreDescription')}
                 </p>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-semibold text-yellow-900 mb-2">⚠️ Important Notes</h4>
-                <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
-                  <li>Backup files contain your settings configuration</li>
-                  <li>Database backups are stored separately in the data folder</li>
-                  <li>Always keep recent backups in a safe location</li>
-                  <li>Test restored backups to ensure data integrity</li>
-                </ul>
+                <h4 className="font-semibold text-yellow-900 mb-2">{t('settings.importantNote')}</h4>
+                <p className="text-sm text-yellow-800">
+                  {t('settings.backupWarning')}
+                </p>
               </div>
             </div>
           </div>
