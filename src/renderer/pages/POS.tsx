@@ -14,7 +14,7 @@ import {
   RotateCcw,
   Receipt,
   Percent,
-  BarcodeScan,
+  ScanBarcode,
   Clock,
 } from 'lucide-react';
 import { useCartStore } from '../stores/cartStore';
@@ -359,7 +359,7 @@ const POS = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-800">{t('pos.title') || 'Point of Sale'}</h1>
             <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
-              <BarcodeScan size={16} />
+              <ScanBarcode size={16} />
               Scan barcode or search products
             </p>
           </div>
