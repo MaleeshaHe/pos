@@ -27,6 +27,7 @@ import PaymentModal from '../components/PaymentModal';
 import HoldBillsModal from '../components/HoldBillsModal';
 import ReturnBillModal from '../components/ReturnBillModal';
 import QuickAddCustomerModal from '../components/QuickAddCustomerModal';
+import { audioFeedback } from '../utils/audioFeedback';
 
 interface Product {
   id: number;
@@ -37,6 +38,15 @@ interface Product {
   sellingPrice: number;
   stock: number;
   unit: string;
+  categoryId?: number;
+  categoryName?: string;
+  imageUrl?: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  nameSi?: string;
 }
 
 interface Customer {
@@ -47,12 +57,27 @@ interface Customer {
   currentCredit: number;
 }
 
+interface CustomerPurchase {
+  billNumber: string;
+  createdAt: string;
+  total: number;
+  items: Array<{
+    productId: number;
+    productName: string;
+    quantity: number;
+  }>;
+}
+
 const POS = () => {
   const { t, i18n } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]); // Store all products for filtering
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [customerPurchases, setCustomerPurchases] = useState<CustomerPurchase[]>([]);
   const [showPayment, setShowPayment] = useState(false);
   const [showHoldBills, setShowHoldBills] = useState(false);
   const [showReturnBill, setShowReturnBill] = useState(false);
@@ -60,6 +85,7 @@ const POS = () => {
   const [showLowStockWarning, setShowLowStockWarning] = useState(false);
   const [lowStockProduct, setLowStockProduct] = useState<Product | null>(null);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [showCustomerHistory, setShowCustomerHistory] = useState(false);
   const [globalDiscount, setGlobalDiscount] = useState(0);
   const [globalDiscountType, setGlobalDiscountType] = useState<'percentage' | 'amount'>('percentage');
   const [billNotes, setBillNotes] = useState('');
@@ -73,6 +99,7 @@ const POS = () => {
   useEffect(() => {
     loadProducts();
     loadCustomers();
+    loadCategories();
 
     // Setup keyboard shortcuts and barcode scanner listener
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -177,7 +204,20 @@ const POS = () => {
   const loadProducts = async () => {
     const result = await window.api.getProducts();
     if (result.success) {
-      setProducts(result.data);
+      // Map stock field correctly
+      const productsWithStock = result.data.map((p: any) => ({
+        ...p,
+        stock: p.currentStock || p.stock || 0,
+      }));
+      setAllProducts(productsWithStock);
+      setProducts(productsWithStock);
+    }
+  };
+
+  const loadCategories = async () => {
+    const result = await window.api.getCategories();
+    if (result.success) {
+      setCategories(result.data);
     }
   };
 
@@ -188,14 +228,38 @@ const POS = () => {
     }
   };
 
+  const loadCustomerPurchases = async (customerId: number) => {
+    try {
+      const result = await window.api.getCustomerBills(customerId);
+      if (result.success) {
+        setCustomerPurchases(result.data.slice(0, 5)); // Last 5 purchases
+      }
+    } catch (error) {
+      console.error('Failed to load customer purchases:', error);
+    }
+  };
+
+  const filterByCategory = (categoryId: number | null) => {
+    setSelectedCategory(categoryId);
+    if (categoryId === null) {
+      setProducts(allProducts);
+    } else {
+      const filtered = allProducts.filter((p) => p.categoryId === categoryId);
+      setProducts(filtered);
+    }
+    setSearchQuery('');
+  };
+
   const handleBarcodeScanned = async (barcode: string) => {
     // Search for product by barcode
     const result = await window.api.searchProducts(barcode);
     if (result.success && result.data.length > 0) {
       const product = result.data[0];
       handleAddToCart(product);
+      audioFeedback.success(); // Success beep
       toast.success(`📦 ${product.name} scanned!`, { icon: '✓' });
     } else {
+      audioFeedback.error(); // Error sound
       toast.error(`Barcode "${barcode}" not found!`);
     }
   };
@@ -205,10 +269,21 @@ const POS = () => {
     if (query.length >= 2) {
       const result = await window.api.searchProducts(query);
       if (result.success) {
-        setProducts(result.data);
+        // Apply category filter if selected
+        if (selectedCategory !== null) {
+          const filtered = result.data.filter((p: Product) => p.categoryId === selectedCategory);
+          setProducts(filtered);
+        } else {
+          setProducts(result.data);
+        }
       }
     } else if (query.length === 0) {
-      loadProducts();
+      // Restore category filter if active
+      if (selectedCategory !== null) {
+        filterByCategory(selectedCategory);
+      } else {
+        setProducts(allProducts);
+      }
     }
   };
 
@@ -223,6 +298,7 @@ const POS = () => {
 
   const handleAddToCart = (product: Product) => {
     if (product.stock <= 0) {
+      audioFeedback.error(); // Error sound for out of stock
       toast.error(t('pos.outOfStock') || 'Product out of stock!');
       return;
     }
@@ -231,6 +307,7 @@ const POS = () => {
     const currentCartQty = existingItem ? existingItem.quantity : 0;
 
     if (existingItem && existingItem.quantity >= product.stock) {
+      audioFeedback.error(); // Error sound for insufficient stock
       toast.error(t('pos.notEnoughStock') || 'Not enough stock available!');
       return;
     }
@@ -239,10 +316,12 @@ const POS = () => {
     const remainingStock = product.stock - currentCartQty - 1;
     if (remainingStock === 0) {
       // Last piece warning
+      audioFeedback.warning(); // Warning sound for last piece
       setLowStockProduct(product);
       setShowLowStockWarning(true);
     } else if (remainingStock === 1) {
       // Only 1 piece will remain
+      audioFeedback.warning(); // Warning sound
       toast.warning(`⚠️ Only 1 piece left after this!`, { duration: 2000 });
     }
 
@@ -258,6 +337,7 @@ const POS = () => {
       currentStock: product.stock,
     });
 
+    audioFeedback.itemAdded(); // Sound for item added
     toast.success(`${product.name} added`, { duration: 1000 });
     setSearchQuery('');
     searchInputRef.current?.focus();
@@ -417,6 +497,7 @@ const POS = () => {
       const result = await window.api.createBill(billData);
 
       if (result.success) {
+        audioFeedback.checkout(); // Checkout complete sound
         toast.success('Sale completed successfully! 🎉');
 
         // Print receipt if requested
@@ -430,9 +511,11 @@ const POS = () => {
         // Reload products to update stock
         loadProducts();
       } else {
+        audioFeedback.error(); // Error sound
         toast.error(result.error || 'Failed to complete sale');
       }
     } catch (error) {
+      audioFeedback.error(); // Error sound
       toast.error('An error occurred');
       console.error(error);
     }
@@ -560,7 +643,7 @@ const POS = () => {
         )}
 
         {/* Search Bar */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -574,6 +657,37 @@ const POS = () => {
           </div>
         </div>
 
+        {/* Category Filter */}
+        {categories.length > 0 && (
+          <div className="mb-4">
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              <button
+                onClick={() => filterByCategory(null)}
+                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                  selectedCategory === null
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400'
+                }`}
+              >
+                All Products
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => filterByCategory(category.id)}
+                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                    selectedCategory === category.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  {i18n.language === 'si' && category.nameSi ? category.nameSi : category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Products Grid */}
         <div className="flex-1 overflow-auto">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -581,9 +695,25 @@ const POS = () => {
               <div
                 key={product.id}
                 onClick={() => handleAddToCart(product)}
-                className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200 hover:border-blue-400"
+                className="bg-white rounded-lg shadow-md p-3 cursor-pointer hover:shadow-lg transition-shadow border border-gray-200 hover:border-blue-400 flex flex-col"
               >
-                <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 text-sm">
+                {/* Product Image */}
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-24 object-cover rounded-md mb-2"
+                    onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext x="50" y="50" font-family="Arial" font-size="14" fill="%23999" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-md mb-2 flex items-center justify-center">
+                    <ShoppingCart size={32} className="text-gray-400" />
+                  </div>
+                )}
+
+                <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 text-sm flex-1">
                   {i18n.language === 'si' && product.nameSi ? product.nameSi : product.name}
                 </h3>
                 <p className="text-xs text-gray-500 mb-2">{product.sku}</p>
@@ -609,6 +739,23 @@ const POS = () => {
 
       {/* Right Side - Cart & Checkout */}
       <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+        {/* Running Total Display - Large and Prominent */}
+        <div className={`p-6 text-center border-b-4 transition-colors ${
+          items.length > 0 ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-700' : 'bg-gray-100 border-gray-300'
+        }`}>
+          <p className={`text-sm font-medium mb-1 ${items.length > 0 ? 'text-blue-100' : 'text-gray-500'}`}>
+            {items.length > 0 ? 'CURRENT BILL TOTAL' : 'NO ITEMS IN CART'}
+          </p>
+          <p className={`text-5xl font-bold tracking-tight ${items.length > 0 ? 'text-white' : 'text-gray-400'}`}>
+            {formatCurrency(calculateFinalTotal())}
+          </p>
+          {items.length > 0 && (
+            <p className="text-sm text-blue-100 mt-2">
+              {items.length} item{items.length !== 1 ? 's' : ''} • Subtotal: {formatCurrency(getSubtotal())}
+            </p>
+          )}
+        </div>
+
         {/* Customer Selection */}
         <div className="p-4 border-b border-gray-200">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -621,6 +768,11 @@ const POS = () => {
               onChange={(e) => {
                 const customer = customers.find((c) => c.id === Number(e.target.value));
                 setSelectedCustomer(customer || null);
+                if (customer) {
+                  loadCustomerPurchases(customer.id);
+                } else {
+                  setCustomerPurchases([]);
+                }
               }}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
@@ -640,12 +792,59 @@ const POS = () => {
             </button>
           </div>
           {selectedCustomer && (
-            <p className="text-xs text-gray-600 mt-1">
-              Credit Limit: {formatCurrency(selectedCustomer.creditLimit)} |
-              Current: {formatCurrency(selectedCustomer.currentCredit)}
-            </p>
+            <>
+              <p className="text-xs text-gray-600 mt-1">
+                Credit Limit: {formatCurrency(selectedCustomer.creditLimit)} |
+                Current: {formatCurrency(selectedCustomer.currentCredit)}
+              </p>
+              {customerPurchases.length > 0 && (
+                <button
+                  onClick={() => setShowCustomerHistory(!showCustomerHistory)}
+                  className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  {showCustomerHistory ? 'Hide' : 'View'} Purchase History ({customerPurchases.length})
+                </button>
+              )}
+            </>
           )}
         </div>
+
+        {/* Customer Purchase History */}
+        {selectedCustomer && showCustomerHistory && customerPurchases.length > 0 && (
+          <div className="px-4 pb-4 border-b border-gray-200 max-h-48 overflow-y-auto bg-blue-50">
+            <p className="text-xs font-semibold text-gray-700 mb-2">Last 5 Purchases:</p>
+            <div className="space-y-2">
+              {customerPurchases.map((purchase) => (
+                <div key={purchase.billNumber} className="bg-white rounded p-2 text-xs">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-semibold text-gray-900">{purchase.billNumber}</span>
+                    <span className="text-blue-600 font-bold">{formatCurrency(purchase.total)}</span>
+                  </div>
+                  <p className="text-gray-500 text-[10px]">
+                    {new Date(purchase.createdAt).toLocaleDateString()} • {purchase.items?.length || 0} items
+                  </p>
+                  {purchase.items && purchase.items.length > 0 && (
+                    <button
+                      onClick={() => {
+                        // Add "Buy Again" functionality
+                        purchase.items.forEach((item) => {
+                          const product = allProducts.find(p => p.id === item.productId);
+                          if (product && product.stock > 0) {
+                            handleAddToCart(product);
+                          }
+                        });
+                        toast.success('Items added to cart!');
+                      }}
+                      className="mt-1 text-[10px] text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      🔁 Buy Again
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Cart Items */}
         <div className="flex-1 overflow-auto p-4">

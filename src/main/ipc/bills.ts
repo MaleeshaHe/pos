@@ -221,3 +221,29 @@ ipcMain.handle('bills:getItems', async (_, billId: number) => {
     return { success: false, error: error.message };
   }
 });
+
+ipcMain.handle('bills:getByCustomer', async (_, customerId: number) => {
+  try {
+    // Get last 5 bills for this customer
+    const bills = await db.select().from(schema.bills)
+      .where(eq(schema.bills.customerId, customerId))
+      .orderBy(desc(schema.bills.createdAt))
+      .limit(5)
+      .all();
+
+    // Get items for each bill
+    const billsWithItems = await Promise.all(
+      bills.map(async (bill) => {
+        const items = await db.select().from(schema.billItems)
+          .where(eq(schema.billItems.billId, bill.id))
+          .all();
+
+        return { ...bill, items };
+      })
+    );
+
+    return { success: true, data: billsWithItems };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
